@@ -37,7 +37,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import type { PosterItem, PluginConfig } from '../types';
-import { pickImageUrl, pickLogoUrl, hasNativeLogoImage } from '../types';
+import { pickImageUrl, pickImageCandidates, loadImageWithFallback, pickLogoUrl, hasNativeLogoImage } from '../types';
 
 const props = withDefaults(defineProps<{
   items: PosterItem[];
@@ -100,14 +100,6 @@ function nextItem(): PosterItem | null {
   if (cursor >= queue.length) reshuffle();
   return queue[cursor++] || null;
 }
-function preload(url: string): Promise<boolean> {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = async () => { try { await img.decode(); } catch {} resolve(true); };
-    img.onerror = () => resolve(false);
-    img.src = url;
-  });
-}
 function fillThumbs() {
   // 有限扫描：连续 miss 满一轮队列长度即判定当前没有可用图片，进入空态，
   // 避免列表非空但全部缺图时 while 同步死循环卡死主线程
@@ -160,8 +152,8 @@ async function spawn() {
   if (warming || !thumbs.value.length) return;
   warming = true;
   const t = thumbs.value[0];
-  const url = imageUrl(t.item);
-  if (!(await preload(url))) {
+  const url = await loadImageWithFallback(pickImageCandidates(t.item, props.imageType as any, cfg.value.tmdb_image_domain));
+  if (!url) {
     thumbs.value.shift();
     fillThumbs();
     warming = false;

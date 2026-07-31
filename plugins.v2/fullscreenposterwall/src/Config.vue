@@ -42,6 +42,14 @@
         class="mb-3"
       />
 
+      <v-select
+        v-model.number="local.poster_count"
+        :items="posterCountOptions"
+        label="海报数量（每次拉取）"
+        density="comfortable"
+        class="mb-3"
+      />
+
       <v-text-field
         v-model.number="local.interval"
         label="切换间隔（秒）"
@@ -146,6 +154,8 @@ const effectOptions = [
   { title: '怀旧冲印 (Vintage Prints)', value: 'vintage' },
   { title: '光舞 (Light Dance)', value: 'lightdance' },
 ]
+const posterCountOptions = [30, 60, 120, 180, 240]
+
 const imageTypeOptions = [
   { title: '背景大图 (backdrop)', value: 'backdrop' },
   { title: '带Logo的背景大图 (logo)', value: 'logo' },
@@ -158,6 +168,7 @@ const defaults = {
   effect: 'photos',
   image_type: 'backdrop',
   interval: 8,
+  poster_count: 60,
   refresh_minutes: 60,
   autoplay: true,
   show_dashboard: true,

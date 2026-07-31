@@ -25,7 +25,7 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, watch } from 'vue';
 import type { PosterItem, PluginConfig } from '../types';
-import { pickImageUrl, pickLogoUrl, hasNativeLogoImage } from '../types';
+import { pickImageUrl, pickImageCandidates, loadImageWithFallback, pickLogoUrl, hasNativeLogoImage } from '../types';
 
 const props = defineProps<{
   items: PosterItem[];
@@ -85,22 +85,22 @@ function imageUrl(item: PosterItem): string {
   return pickImageUrl(item, props.imageType as any, cfg.value.tmdb_image_domain);
 }
 
-// 预加载成功才返回，失败自动跳下一张；同时带出片名 Logo URL
+// 预加载成功才返回（条目内逐级回退候选图，死主机自动跳过、单候选 1.5s 超时），
+// 全部失败跳下一张；同时带出片名 Logo URL
 function nextPhoto(): Promise<{ url: string; logo: string }> {
-  return new Promise(resolve => {
+  return new Promise(async resolve => {
     if (!props.items.length) return resolve({ url: '', logo: '' });
     let guard = 0;
-    const tryNext = () => {
+    while (guard++ <= props.items.length) {
       if (cursor >= queue.length) reshuffle();
       const it = queue[cursor++];
-      const url = it ? imageUrl(it) : '';
-      if (!url || ++guard > props.items.length) return resolve({ url: '', logo: '' });
-      const img = new Image();
-      img.onload = () => resolve({ url, logo: (it && !hasNativeLogoImage(it)) ? logoUrl(it) : '' });
-      img.onerror = () => tryNext();
-      img.src = url;
-    };
-    tryNext();
+      const cands = it ? pickImageCandidates(it, props.imageType as any, cfg.value.tmdb_image_domain) : [];
+      if (!cands.length) continue;
+      const url = await loadImageWithFallback(cands);
+      if (!url) continue;
+      return resolve({ url, logo: (it && !hasNativeLogoImage(it)) ? logoUrl(it) : '' });
+    }
+    resolve({ url: '', logo: '' });
   });
 }
 
@@ -131,9 +131,8 @@ async function makeTile(w: number): Promise<Tile> {
 async function makeRow(count: number): Promise<Tile[]> {
   const ws = Array.from({ length: count }, genWidth);
   const sum = ws.reduce((a, b) => a + b, 0);
-  const tiles: Tile[] = [];
-  for (const w of ws) tiles.push(await makeTile(w / sum));
-  return tiles;
+  // 并行构建瓷砖：某块图慢不拖垮整行（首屏速度关键）
+  return Promise.all(ws.map(w => makeTile(w / sum)));
 }
 
 async function buildLayout() {
@@ -144,8 +143,7 @@ async function buildLayout() {
   // 两行模块数错开（3~5），接缝自然不同
   counts[0] = 3 + Math.floor(Math.random() * 3);
   counts[1] = 3 + Math.floor(Math.random() * 3);
-  const out: Tile[][] = [];
-  for (const c of counts) out.push(await makeRow(c));
+  const out: Tile[][] = await Promise.all(counts.map(c => makeRow(c)));
   rows.value = out;
   preloadAhead();
 }
@@ -258,15 +256,18 @@ watch(() => props.items?.length, async (n, old) => { if (!old || n !== old) { aw
 .ctile-half img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
 .ctile-logo {
   position: absolute; inset: 0; margin: auto;
-  max-width: 70%; max-height: 55%;
+  /* 宽度驱动：始终随瓷砖宽度缩放（高度只做兜底约束） */
+  width: 62%; height: auto;
+  max-height: 62%;
   object-fit: contain;
   filter: drop-shadow(0 4px 16px rgba(0,0,0,.65));
   pointer-events: none;
 }
-/* 横版 Logo：贴瓷砖底部中间 */
+/* 横版 Logo：贴瓷砖底部中间，同样随瓷砖宽度缩放 */
 .ctile-logo.logo-wide {
   inset: auto; margin: 0;
   left: 50%; bottom: 8%;
+  width: 56%;
   transform: translateX(-50%);
 }
 </style>

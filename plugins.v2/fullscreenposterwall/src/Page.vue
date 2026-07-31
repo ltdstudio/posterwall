@@ -7,7 +7,8 @@
         <div>
           <h2 class="ma-0">全屏海报墙</h2>
           <div class="fspw-meta">
-            {{ items.length }} 张海报已就绪 ·
+            <span v-if="!items.length" class="fspw-waiting">请等候拉取图片…</span>
+            <template v-else>{{ items.length }} 张海报已就绪 ·</template>
             <strong>{{ effectName }}</strong> ·
             {{ config.interval }} 秒切换
           </div>
@@ -417,7 +418,9 @@ onBeforeUnmount(() => {
   width: 48px; height: 48px; border-radius: 12px;
   display: grid; place-items: center;
 }
-.fspw-meta { font-size: 13px; opacity: 0.75; margin-top: 2px; }
+.fspw-meta { font-size: 13px; opacity: 0.65; }
+.fspw-waiting { color: #f87171; font-weight: 600; opacity: 1; animation: fspw-blink 0.9s step-start infinite; }
+@keyframes fspw-blink { 50% { opacity: 0.15; } }
 .fspw-meta strong { color: rgb(var(--v-theme-primary)); }
 .fspw-header-actions { display: flex; align-items: center; }
 
