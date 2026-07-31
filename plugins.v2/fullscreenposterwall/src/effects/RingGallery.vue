@@ -46,7 +46,13 @@ const props = withDefaults(defineProps<{
 
 const cfg = ref<PluginConfig>({ tmdb_image_domain: 'https://image.tmdb.org/t/p/original' } as PluginConfig);
 fetch('/api/v1/plugin/FullScreenPosterWall/config')
-  .then(r => r.json()).then(d => { if (d?.data) cfg.value = d.data; }).catch(() => {});
+  .then(r => r.json()).then(d => {
+    if (d?.data) {
+      cfg.value = d.data;
+      // 配置异步到达后按真实 interval 重建轮换定时器，避免一直停留在默认 8 秒
+      if (timer && !document.hidden) startTimer();
+    }
+  }).catch(() => {});
 
 const imageType = ref(props.imageType);
 watch(() => props.imageType, v => { imageType.value = v || 'backdrop'; });
@@ -123,19 +129,24 @@ function rotate() {
 
 function onResize() { computeRadius(); }
 
+function currentInterval(): number {
+  return Math.max(4, cfg.value.interval || 8) * 1000;
+}
+function startTimer() {
+  if (timer) { clearInterval(timer); timer = null; }
+  timer = setInterval(rotate, currentInterval());
+}
+
 onMounted(() => {
   computeRadius();
   build();
   window.addEventListener('resize', onResize);
-  const iv = Math.max(4, cfg.value.interval || 8) * 1000;
-  timer = setInterval(rotate, iv);
+  startTimer();
   document.addEventListener('visibilitychange', vis);
 });
 function vis() {
   if (document.hidden && timer) { clearInterval(timer); timer = null; }
-  else if (!document.hidden && !timer) {
-    timer = setInterval(rotate, Math.max(4, cfg.value.interval || 8) * 1000);
-  }
+  else if (!document.hidden && !timer) startTimer();
 }
 onBeforeUnmount(() => {
   if (timer) clearInterval(timer);

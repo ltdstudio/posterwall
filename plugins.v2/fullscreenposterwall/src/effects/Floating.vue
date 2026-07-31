@@ -46,6 +46,7 @@ let raf: number | undefined;
 let lastSpawn = 0;
 let lastSwap = 0;
 let cursor = 0;
+let initialized = false;
 const MAX = 16;    // 同时存在的卡片数（翻倍）
 
 function logoUrl(item: PosterItem): string {
@@ -61,7 +62,9 @@ function trimOverview(s: string, max = 70): string {
 }
 
 function spawn(): Moving | null {
-  if (cursor >= props.items.length) return null;
+  if (!props.items.length) return null;
+  // 队列耗尽后循环复用素材，保证长时间运行持续轮播
+  if (cursor >= props.items.length) cursor = 0;
   const item = props.items[cursor++];
   const w = window.innerWidth, h = window.innerHeight;
   const size = 240 + Math.random() * 300;   // 最大尺寸增大
@@ -92,23 +95,33 @@ function cardStyle(m: Moving): Record<string, string> {
 
 function step(now: number) {
   const w = window.innerWidth, h = window.innerHeight;
-  // 替换卡片（每 props.interval 秒换一次最早出现的）
-  if (now - lastSwap > props.interval * 1000) {
-    const oldest = moving.value.reduce((a, b) => (a.fade > b.fade ? b : a), moving.value[0]);
-    if (oldest) {
-      const fresh = spawn();
-      if (fresh) {
-        Object.assign(oldest, fresh);
+  if (props.autoplay) {
+    // 替换卡片（每 props.interval 秒换一次最早出现的）
+    if (now - lastSwap > props.interval * 1000) {
+      const oldest = moving.value.reduce((a, b) => (a.fade > b.fade ? b : a), moving.value[0]);
+      if (oldest) {
+        const fresh = spawn();
+        if (fresh) {
+          Object.assign(oldest, fresh);
+        }
       }
+      lastSwap = now;
     }
-    lastSwap = now;
+    // 新生卡片
+    if (moving.value.length < MAX && now - lastSpawn > 800) {
+      const m = spawn();
+      if (m) moving.value.push(m);
+      lastSpawn = now;
+    }
+  } else if (!initialized) {
+    // 关闭自动播放：仅做一次性初始填充，之后不再轮换/补卡
+    while (moving.value.length < Math.min(MAX, props.items.length)) {
+      const m = spawn();
+      if (!m) break;
+      moving.value.push(m);
+    }
   }
-  // 新生卡片
-  if (moving.value.length < MAX && now - lastSpawn > 800) {
-    const m = spawn();
-    if (m) moving.value.push(m);
-    lastSpawn = now;
-  }
+  initialized = true;
 
   for (const m of moving.value) {
     m.x += m.vx;

@@ -109,11 +109,16 @@ function preload(url: string): Promise<boolean> {
   });
 }
 function fillThumbs() {
-  while (thumbs.value.length < THUMBS_N) {
+  // 有限扫描：连续 miss 满一轮队列长度即判定当前没有可用图片，进入空态，
+  // 避免列表非空但全部缺图时 while 同步死循环卡死主线程
+  const limit = Math.max(props.items.length, 1);
+  let misses = 0;
+  while (thumbs.value.length < THUMBS_N && misses < limit) {
     const it = nextItem();
     if (!it) break;
     const url = imageUrl(it);
-    if (!url) continue;
+    if (!url) { misses++; continue; }
+    misses = 0;
     // 黑色深处随机散布：位置/大小/透明度/模糊（远景更小更淡更糊）
     const depth = 0.35 + Math.random() * 0.65;
     thumbs.value.push({
