@@ -25,7 +25,7 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, watch } from 'vue';
 import type { PosterItem, PluginConfig } from '../types';
-import { pickImageUrl, pickImageCandidates, loadImageWithFallback, pickLogoUrl, hasNativeLogoImage } from '../types';
+import { pickImageUrl, pickImageCandidates, loadImageWithFallback, noteLoadedMainUrl, pickLogoUrl, hasNativeLogoImage } from '../types';
 
 const props = defineProps<{
   items: PosterItem[];
@@ -98,6 +98,7 @@ function nextPhoto(): Promise<{ url: string; logo: string }> {
       if (!cands.length) continue;
       const url = await loadImageWithFallback(cands);
       if (!url) continue;
+      noteLoadedMainUrl(it, props.imageType as any, url, cfg.value.tmdb_image_domain);
       return resolve({ url, logo: (it && !hasNativeLogoImage(it)) ? logoUrl(it) : '' });
     }
     resolve({ url: '', logo: '' });

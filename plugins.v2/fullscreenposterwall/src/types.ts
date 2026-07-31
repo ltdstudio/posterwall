@@ -14,6 +14,8 @@ export interface PosterItem {
   fanart_poster_path?: string | null;  // Fanart 带片名海报
   tmdb_id?: number | null;
   release_date?: string | null;
+  /** 内部标记：logo 模式下原生带字图加载失败、主图实际已回退为普通图（需恢复 Logo 叠层） */
+  __native_failed?: boolean;
 }
 
 export interface PluginConfig {
@@ -97,9 +99,23 @@ export function loadImageWithFallback(urls: string[], timeoutMs = 1500): Promise
   });
 }
 
-/** 是否已有「原生带 Logo 的图」（有则主图自带片名，无需再叠透明 Logo）。 */
+/** 是否已有「原生带 Logo 的图」（有则主图自带片名，无需再叠透明 Logo）。
+ *  原生图声明存在但加载失败、实际已回退到普通图（__native_failed）时按没有处理。 */
 export function hasNativeLogoImage(item: PosterItem): boolean {
+  if (item.__native_failed) return false;
   return !!(item.thumb_path || item.fanart_poster_path);
+}
+
+/** 记录条目实际加载成功的主图 URL，维护 __native_failed 标记：
+ *  logo 模式下成功的 URL 不是原生带字候选（thumb/fanart_poster）时置位，
+ *  后续 hasNativeLogoImage 据此恢复 Logo 叠层（按实际加载结果而非声明判断）。 */
+export function noteLoadedMainUrl(item: PosterItem, type: 'backdrop' | 'poster' | 'logo' | string, url: string, domain: string): void {
+  if (!item || type !== 'logo' || !url) return;
+  const base = domain || 'https://image.tmdb.org/t/p/original';
+  const natives = [item.thumb_path, item.fanart_poster_path]
+    .filter((p): p is string => !!p)
+    .map(p => (/^https?:\/\//.test(p) ? p : p.startsWith('/') ? base + p : base + '/' + p));
+  item.__native_failed = !natives.includes(url);
 }
 
 /** 取片名 Logo（透明艺术字图）URL；没有则返回空串。 */

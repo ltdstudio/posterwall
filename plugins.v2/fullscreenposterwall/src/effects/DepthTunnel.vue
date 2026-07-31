@@ -37,7 +37,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import type { PosterItem, PluginConfig } from '../types';
-import { pickImageUrl, pickImageCandidates, loadImageWithFallback, pickLogoUrl, hasNativeLogoImage } from '../types';
+import { pickImageUrl, pickImageCandidates, loadImageWithFallback, noteLoadedMainUrl, pickLogoUrl, hasNativeLogoImage } from '../types';
 
 const props = withDefaults(defineProps<{
   items: PosterItem[];
@@ -153,6 +153,7 @@ async function spawn() {
   warming = true;
   const t = thumbs.value[0];
   const url = await loadImageWithFallback(pickImageCandidates(t.item, props.imageType as any, cfg.value.tmdb_image_domain));
+  noteLoadedMainUrl(t.item, props.imageType as any, url, cfg.value.tmdb_image_domain);
   if (!url) {
     thumbs.value.shift();
     fillThumbs();
