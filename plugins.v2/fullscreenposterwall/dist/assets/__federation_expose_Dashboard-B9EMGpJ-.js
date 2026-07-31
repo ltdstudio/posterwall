@@ -1,5 +1,5 @@
 import { importShared } from './__federation_fn_import-JrT3xvdd.js';
-import { D as DepthTunnel, R as RingGallery, S as SlidingPanels, a as ShiftingTiles, L as LightDance, V as VintagePrints, F as Floating, P as PhotosSlideshow } from './DepthTunnel-K0np4oO-.js';
+import { D as DepthTunnel, R as RingGallery, S as SlidingPanels, a as ShiftingTiles, L as LightDance, V as VintagePrints, F as Floating, P as PhotosSlideshow } from './DepthTunnel-HYAfcPPq.js';
 import { _ as _export_sfc } from './_plugin-vue_export-helper-pcqpp-6-.js';
 
 const {createElementVNode:_createElementVNode,toDisplayString:_toDisplayString,createTextVNode:_createTextVNode,resolveComponent:_resolveComponent,withCtx:_withCtx,createVNode:_createVNode,resolveDynamicComponent:_resolveDynamicComponent,openBlock:_openBlock,createBlock:_createBlock,normalizeStyle:_normalizeStyle,normalizeClass:_normalizeClass,Fragment:_Fragment,createElementBlock:_createElementBlock,createCommentVNode:_createCommentVNode,Teleport:_Teleport} = await importShared('vue');
@@ -58,7 +58,7 @@ const effectName = computed(() => {
   const map = {
     photos: '照片', floating: '浮动', vintage: '怀旧冲印',
     lightdance: '光舞',
-    shiftingtiles: '不断变化的拼贴', slidingpanels: '滑动面板',
+    shiftingtiles: '流动拼贴', slidingpanels: '滑动面板',
     ring3d: '环形画廊', depthtunnel: '纵深穿梭',
   };
   return map[cfg.value?.effect || 'photos'] || '照片'
@@ -294,6 +294,6 @@ return (_ctx, _cache) => {
 }
 
 };
-const Dashboard = /*#__PURE__*/_export_sfc(_sfc_main, [['__scopeId',"data-v-16acc29e"]]);
+const Dashboard = /*#__PURE__*/_export_sfc(_sfc_main, [['__scopeId',"data-v-338ef4ef"]]);
 
 export { Dashboard as default };

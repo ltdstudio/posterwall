@@ -1,6 +1,11 @@
 <template>
   <!-- 环形画廊：照片排在 3D 圆柱环上，周期性步进旋转，正面照片聚焦 -->
   <div class="ring-root">
+    <!-- 背景动效：极光光斑缓慢漂移 + 微尘光点上升 -->
+    <div class="rg-aurora a1" />
+    <div class="rg-aurora a2" />
+    <div class="rg-dust d1" />
+    <div class="rg-dust d2" />
     <div class="ring-stage">
       <div class="ring" :style="ringStyle">
         <div
@@ -142,6 +147,60 @@ watch(() => props.items, build, { deep: true });
 
 <style scoped>
 .ring-root { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 30%, #101318 0%, #000 70%); overflow: hidden; }
+/* 极光光斑：两团缓慢漂移的柔光 */
+.rg-aurora {
+  position: absolute; width: 55vmax; height: 55vmax;
+  border-radius: 50%; filter: blur(90px);
+  pointer-events: none; opacity: 0.16;
+}
+.rg-aurora.a1 {
+  left: -10%; top: -15%;
+  background: radial-gradient(circle, #3b5bdb 0%, transparent 65%);
+  animation: rg-aurora-1 26s ease-in-out infinite alternate;
+}
+.rg-aurora.a2 {
+  right: -15%; bottom: -20%;
+  background: radial-gradient(circle, #9775fa 0%, transparent 65%);
+  animation: rg-aurora-2 34s ease-in-out infinite alternate;
+}
+@keyframes rg-aurora-1 {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(22vw, 14vh) scale(1.25); }
+}
+@keyframes rg-aurora-2 {
+  from { transform: translate(0, 0) scale(1.15); }
+  to   { transform: translate(-18vw, -12vh) scale(0.9); }
+}
+/* 微尘光点：两层不同大小/速度的光点缓缓上升 */
+.rg-dust {
+  position: absolute; inset: -100% 0 0 0;
+  pointer-events: none;
+  background-repeat: repeat;
+}
+.rg-dust.d1 {
+  background-image:
+    radial-gradient(1.6px 1.6px at 12% 22%, rgba(255,255,255,.55), transparent),
+    radial-gradient(1.4px 1.4px at 38% 68%, rgba(255,255,255,.4), transparent),
+    radial-gradient(1.8px 1.8px at 64% 12%, rgba(255,255,255,.5), transparent),
+    radial-gradient(1.3px 1.3px at 82% 46%, rgba(255,255,255,.35), transparent),
+    radial-gradient(1.5px 1.5px at 52% 88%, rgba(255,255,255,.45), transparent);
+  background-size: 480px 480px;
+  animation: rg-rise 46s linear infinite;
+  opacity: .5;
+}
+.rg-dust.d2 {
+  background-image:
+    radial-gradient(2.4px 2.4px at 24% 56%, rgba(255,255,255,.6), transparent),
+    radial-gradient(2.1px 2.1px at 58% 34%, rgba(255,255,255,.45), transparent),
+    radial-gradient(2.6px 2.6px at 76% 78%, rgba(255,255,255,.55), transparent);
+  background-size: 720px 720px;
+  animation: rg-rise 30s linear infinite;
+  opacity: .4;
+}
+@keyframes rg-rise {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-50%); }
+}
 .ring-stage {
   position: absolute; inset: 0;
   perspective: 1400px;

@@ -198,6 +198,45 @@
 
   /* 环形画廊：3D 圆柱环 + 步进旋转聚焦 */
   .effect-ring3d .rg-root { position: absolute; inset: 0; overflow: hidden; background: radial-gradient(ellipse at 50% 30%, #101318 0%, #000 70%); }
+  /* 极光光斑：两团缓慢漂移的柔光 */
+  .effect-ring3d .rg-aurora {
+    position: absolute; width: 55vmax; height: 55vmax;
+    border-radius: 50%; filter: blur(90px);
+    pointer-events: none; opacity: 0.16;
+  }
+  .effect-ring3d .rg-aurora.a1 {
+    left: -10%; top: -15%;
+    background: radial-gradient(circle, #3b5bdb 0%, transparent 65%);
+    animation: rg-aurora-1 26s ease-in-out infinite alternate;
+  }
+  .effect-ring3d .rg-aurora.a2 {
+    right: -15%; bottom: -20%;
+    background: radial-gradient(circle, #9775fa 0%, transparent 65%);
+    animation: rg-aurora-2 34s ease-in-out infinite alternate;
+  }
+  @keyframes rg-aurora-1 { from { transform: translate(0,0) scale(1); } to { transform: translate(22vw,14vh) scale(1.25); } }
+  @keyframes rg-aurora-2 { from { transform: translate(0,0) scale(1.15); } to { transform: translate(-18vw,-12vh) scale(0.9); } }
+  /* 微尘光点：两层不同大小/速度的光点缓缓上升 */
+  .effect-ring3d .rg-dust { position: absolute; inset: -100% 0 0 0; pointer-events: none; background-repeat: repeat; }
+  .effect-ring3d .rg-dust.d1 {
+    background-image:
+      radial-gradient(1.6px 1.6px at 12% 22%, rgba(255,255,255,.55), transparent),
+      radial-gradient(1.4px 1.4px at 38% 68%, rgba(255,255,255,.4), transparent),
+      radial-gradient(1.8px 1.8px at 64% 12%, rgba(255,255,255,.5), transparent),
+      radial-gradient(1.3px 1.3px at 82% 46%, rgba(255,255,255,.35), transparent),
+      radial-gradient(1.5px 1.5px at 52% 88%, rgba(255,255,255,.45), transparent);
+    background-size: 480px 480px;
+    animation: rg-rise 46s linear infinite; opacity: .5;
+  }
+  .effect-ring3d .rg-dust.d2 {
+    background-image:
+      radial-gradient(2.4px 2.4px at 24% 56%, rgba(255,255,255,.6), transparent),
+      radial-gradient(2.1px 2.1px at 58% 34%, rgba(255,255,255,.45), transparent),
+      radial-gradient(2.6px 2.6px at 76% 78%, rgba(255,255,255,.55), transparent);
+    background-size: 720px 720px;
+    animation: rg-rise 30s linear infinite; opacity: .4;
+  }
+  @keyframes rg-rise { from { transform: translateY(0); } to { transform: translateY(-50%); } }
   .effect-ring3d .rg-stage { position: absolute; inset: 0; perspective: 1400px; perspective-origin: 50% 42%; }
   .effect-ring3d .rg-ring { position: absolute; left: 50%; top: 42%; width: 0; height: 0; transform-style: preserve-3d; transition: transform 1.5s cubic-bezier(0.22, 0.68, 0.24, 1); }
   .effect-ring3d .rg-card {
@@ -246,11 +285,17 @@
     animation-name: dt-fly; animation-timing-function: cubic-bezier(0.32, 0.42, 0.55, 1);
     animation-fill-mode: forwards; will-change: transform, opacity;
   }
+  /* 螺旋飞出：绕 2 圈、轨道半径收缩；旋转截止点放大，放大时压最上层 */
   @keyframes dt-fly {
-    0% { transform: translate(0, 0) scale(0.05); opacity: 0; }
-    12% { opacity: 1; }
-    70% { opacity: 1; }
-    100% { transform: translate(var(--dx), var(--dy)) scale(1.45); opacity: 0; }
+    /* 时间配比：旋转 30%、正向放大 60%（旋转的 2 倍）、淡出 10% */
+    0% { transform: scale(0.06) rotate(0deg) translate(16vw, -12vh); opacity: 0; }
+    4% { opacity: 1; }
+    13% { transform: scale(0.30) rotate(230deg) translate(-9vw, 6vh); }
+    21% { transform: scale(0.55) rotate(470deg) translate(5vw, 3.5vh); }
+    26% { transform: scale(0.82) rotate(650deg) translate(-2vw, -1.5vh); }
+    30% { transform: scale(1) rotate(720deg) translate(0, 0); }
+    90% { transform: scale(1.15) rotate(720deg) translate(0, 0); opacity: 1; }
+    100% { transform: scale(1.2) rotate(720deg) translate(var(--dx), var(--dy)); opacity: 0; }
   }
   /* 主图保持原始比例：contain，不裁切不拉伸 */
   .effect-depthtunnel .dt-flyer img:not(.dt-logo) { width: 100%; height: 100%; object-fit: contain; object-position: center; display: block; }
@@ -290,10 +335,10 @@
     70% { transform: translateX(0) rotate(540deg) scale(1.25); }
     100% { transform: translateX(0) rotate(720deg) scale(1.3); }
   }
-  .effect-depthtunnel .dt-meta { position: absolute; left: 48px; bottom: 42px; max-width: 560px; color: #fff; z-index: 3; }
+  .effect-depthtunnel .dt-meta { position: absolute; left: 48px; bottom: 42px; max-width: 560px; color: #fff; z-index: 60; }
   .effect-depthtunnel .dt-title { font-size: 42px; font-weight: 700; text-shadow: 0 2px 14px rgba(0,0,0,.8); }
   .effect-depthtunnel .dt-sub { font-size: 15px; opacity: .8; margin-top: 6px; }
-  .effect-depthtunnel .dt-vignette { position: absolute; inset: 0; pointer-events: none; z-index: 2; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,.6) 100%); }
+  .effect-depthtunnel .dt-vignette { position: absolute; inset: 0; pointer-events: none; z-index: 50; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,.6) 100%); }
   .effect-depthtunnel.no-text .dt-meta { display: none !important; }
 
   /* 切片翻页：竖条错峰 3D 翻转（编织感） */
@@ -423,7 +468,7 @@
   function setTopBar(cfg, items) {
     const tb = document.createElement('div');
     tb.className = 'topbar';
-    const effectName = ({photos:'照片',floating:'浮动',vintage:'怀旧冲印',lightdance:'光舞',shiftingtiles:'不断变化的拼贴',slidingpanels:'滑动面板',ring3d:'环形画廊',depthtunnel:'纵深穿梭'})[cfg.effect] || cfg.effect;
+    const effectName = ({photos:'照片',floating:'浮动',vintage:'怀旧冲印',lightdance:'光舞',shiftingtiles:'流动拼贴',slidingpanels:'滑动面板',ring3d:'环形画廊',depthtunnel:'纵深穿梭'})[cfg.effect] || cfg.effect;
     tb.innerHTML = '<div class="pill"><span class="dot"></span>' + effectName + ' · 每 ' + cfg.interval + ' 秒</div>' +
                    '<div class="pill">' + items.length + ' 张</div>' +
                    (cfg.shuffle ? '<div class="pill">随机乱序</div>' : '') +
@@ -1112,6 +1157,12 @@
     const N = 10, step = 360 / N;
     let cursor = 0, rotation = 0, frontIndex = 0, timer = null;
     const radius = Math.round((Math.min(window.innerWidth * 0.50, 730) / 2) / Math.tan(Math.PI / N)) + 40;
+    // 背景动效：极光光斑 + 微尘光点
+    ['rg-aurora a1', 'rg-aurora a2', 'rg-dust d1', 'rg-dust d2'].forEach(cls => {
+      const d = document.createElement('div');
+      d.className = cls;
+      root.appendChild(d);
+    });
     const stage = document.createElement('div');
     stage.className = 'rg-stage';
     const ring = document.createElement('div');
@@ -1315,8 +1366,8 @@
     const vig = document.createElement('div'); vig.className = 'dt-vignette'; wrap.appendChild(vig);
     root.appendChild(wrap);
 
-    const THUMBS_N = 9, WARMUP_MS = 1300;
-    let queue = [], cursor = 0, timer = null, warming = false;
+    const THUMBS_N = 9;
+    let queue = [], cursor = 0, timer = null, warming = false, zSeq = 0;
     const thumbs = [];
     function reshuffle() {
       queue = [...items];
@@ -1378,31 +1429,29 @@
         warming = false;
         return;
       }
-      // 备选小图热身：抖动 + 绕 2 圈
-      t.el.classList.add('warm');
-      setTimeout(() => {
-        t.el.remove();
-        thumbs.shift();
-        fillThumbs();
-        setMeta(t.item);
-        const el = document.createElement('div');
-        el.className = 'dt-flyer';
-        const dx = ((Math.random() - 0.5) * 46).toFixed(1) + 'vw';
-        const dy = ((Math.random() - 0.5) * 30).toFixed(1) + 'vh';
-        const dur = Math.round(5200 + Math.random() * 1600);
-        el.style.setProperty('--dx', dx);
-        el.style.setProperty('--dy', dy);
-        el.style.animationDuration = dur + 'ms';
-        let html = '<img src="' + escapeHtml(url) + '" alt="" draggable="false" />';
-        if (cfg.image_type === 'logo' && !hasNativeLogo(t.item)) {
-          const lu = logoUrl(t.item, cfg.tmdb_image_domain);
-          if (lu) html += '<img class="dt-logo" onload="this.classList.toggle(\'logo-wide\',this.naturalWidth>=this.naturalHeight)" src="' + escapeHtml(lu) + '" alt="" />';
-        }
-        el.innerHTML = html;
-        wrap.insertBefore(el, thumbsBar);
-        setTimeout(() => el.remove(), dur + 900);
-        warming = false;
-      }, WARMUP_MS);
+      // 选中即螺旋飞出（无单独热身等待）
+      t.el.remove();
+      thumbs.shift();
+      fillThumbs();
+      setMeta(t.item);
+      const el = document.createElement('div');
+      el.className = 'dt-flyer';
+      const dx = ((Math.random() - 0.5) * 30).toFixed(1) + 'vw';
+      const dy = ((Math.random() - 0.5) * 20).toFixed(1) + 'vh';
+      const dur = Math.round(Math.max(4, cfg.interval || 8) * 1000 * (0.92 + Math.random() * 0.1));
+      el.style.setProperty('--dx', dx);
+      el.style.setProperty('--dy', dy);
+      el.style.animationDuration = dur + 'ms';
+      el.style.zIndex = 5 + (++zSeq % 40);   // 图层递增：放大时压在所有旧图上
+      let html = '<img src="' + escapeHtml(url) + '" alt="" draggable="false" />';
+      if (cfg.image_type === 'logo' && !hasNativeLogo(t.item)) {
+        const lu = logoUrl(t.item, cfg.tmdb_image_domain);
+        if (lu) html += '<img class="dt-logo" onload="this.classList.toggle(\'logo-wide\',this.naturalWidth>=this.naturalHeight)" src="' + escapeHtml(lu) + '" alt="" />';
+      }
+      el.innerHTML = html;
+      wrap.insertBefore(el, meta.parentNode === wrap ? meta : thumbsBar);
+      setTimeout(() => el.remove(), dur + 900);
+      warming = false;
     }
     reshuffle();
     fillThumbs();
@@ -1565,10 +1614,17 @@ function startFullscreenCountdown() {
     document.documentElement.requestFullscreen()
       .then(() => cleanup())
       .catch(() => {
-        // 无用户手势：降级为不遮挡的小提示，等待第一次点击/按键
+        // 无用户手势：降级为不遮挡的小提示，2.5 秒后自动隐藏；
+        // 点击/按键监听保持常驻，第一次交互即进全屏
         ov.classList.add('fs-cd-mini');
         numEl.style.display = 'none';
         hintEl.textContent = '点击任意处进入全屏';
+        setTimeout(() => {
+          if (!finished && document.body.contains(ov)) {
+            ov.classList.add('fs-cd-fade');
+            setTimeout(() => ov.remove(), 600);
+          }
+        }, 2500);
       });
   }
   function onClick() { if (!finished) tryFullscreen(); }

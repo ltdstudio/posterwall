@@ -138,7 +138,7 @@ const sourceOptions = [
 ]
 const effectOptions = [
   { title: '照片 (Photos) — 幻灯片', value: 'photos' },
-  { title: '不断变化的拼贴 (Shifting Tiles)', value: 'shiftingtiles' },
+  { title: '流动拼贴 (Shifting Tiles)', value: 'shiftingtiles' },
   { title: '环形画廊 (Ring Gallery) — 3D 环廊', value: 'ring3d' },
   { title: '纵深穿梭 (Depth Tunnel)', value: 'depthtunnel' },
   { title: '滑动面板 (Sliding Panels)', value: 'slidingpanels' },

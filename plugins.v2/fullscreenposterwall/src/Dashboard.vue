@@ -113,7 +113,7 @@ const effectName = computed(() => {
   const map = {
     photos: '照片', floating: '浮动', vintage: '怀旧冲印',
     lightdance: '光舞',
-    shiftingtiles: '不断变化的拼贴', slidingpanels: '滑动面板',
+    shiftingtiles: '流动拼贴', slidingpanels: '滑动面板',
     ring3d: '环形画廊', depthtunnel: '纵深穿梭',
   }
   return map[cfg.value?.effect || 'photos'] || '照片'

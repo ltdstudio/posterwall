@@ -1,5 +1,5 @@
 import { importShared } from './__federation_fn_import-JrT3xvdd.js';
-import { P as PhotosSlideshow, a as ShiftingTiles, R as RingGallery, D as DepthTunnel, S as SlidingPanels, F as Floating, V as VintagePrints, L as LightDance } from './DepthTunnel-K0np4oO-.js';
+import { P as PhotosSlideshow, a as ShiftingTiles, R as RingGallery, D as DepthTunnel, S as SlidingPanels, F as Floating, V as VintagePrints, L as LightDance } from './DepthTunnel-HYAfcPPq.js';
 import { _ as _export_sfc } from './_plugin-vue_export-helper-pcqpp-6-.js';
 
 const {createElementVNode:_createElementVNode,toDisplayString:_toDisplayString,createTextVNode:_createTextVNode,resolveComponent:_resolveComponent,createVNode:_createVNode,withCtx:_withCtx,openBlock:_openBlock,createElementBlock:_createElementBlock,createCommentVNode:_createCommentVNode,createBlock:_createBlock,renderList:_renderList,Fragment:_Fragment,normalizeClass:_normalizeClass,resolveDynamicComponent:_resolveDynamicComponent,Teleport:_Teleport} = await importShared('vue');
@@ -109,7 +109,7 @@ let configPollTimer;
 // ─── 动效元数据 ───────────────────────────────────────────
 const effects = [
   { key: 'photos',       name: '照片',         icon: '📷', desc: '幻灯片 + Ken Burns', comp: PhotosSlideshow },
-  { key: 'shiftingtiles', name: '不断变化的拼贴', icon: '🧩', desc: '模块收缩补位', comp: ShiftingTiles },
+  { key: 'shiftingtiles', name: '流动拼贴', icon: '🧩', desc: '模块收缩补位', comp: ShiftingTiles },
   { key: 'ring3d',       name: '环形画廊',       icon: '🎡', desc: '3D 环廊聚焦',  comp: RingGallery },
   { key: 'depthtunnel',  name: '纵深穿梭',       icon: '🚀', desc: '照片飞来掠影', comp: DepthTunnel },
   { key: 'slidingpanels',name: '滑动面板',      icon: '📑', desc: '多列反向滑动',       comp: SlidingPanels },
@@ -487,6 +487,6 @@ return (_ctx, _cache) => {
 }
 
 };
-const Page = /*#__PURE__*/_export_sfc(_sfc_main, [['__scopeId',"data-v-cd3e8c4c"]]);
+const Page = /*#__PURE__*/_export_sfc(_sfc_main, [['__scopeId',"data-v-166d60ab"]]);
 
 export { Page as default };

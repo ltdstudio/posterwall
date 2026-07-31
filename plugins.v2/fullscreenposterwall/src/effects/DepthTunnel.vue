@@ -18,7 +18,6 @@
         v-for="t in thumbs"
         :key="t.id"
         class="dt-thumb"
-        :class="{ warm: t.id === warmId }"
         :style="thumbStyle(t)"
       >
         <img v-if="t.url" :src="t.url" alt="" draggable="false" />
@@ -61,15 +60,15 @@ interface Flyer {
   dy: number;
   dur: number;
   born: number;
+  z: number;
 }
 interface Thumb { id: number; url: string; item: PosterItem; x: number; y: number; w: number; dur: number; delay: number; depth: number; }
 
 const THUMBS_N = 9;
-const WARMUP_MS = 1300;              // 抖动+绕圈热身时长
+let zSeq = 0;                        // 图层序号：新图始终压旧图
 
 const flyers = ref<Flyer[]>([]);
 const thumbs = ref<Thumb[]>([]);
-const warmId = ref(0);
 const current = ref<PosterItem | null>(null);
 let uid = 0;
 let queue: PosterItem[] = [];
@@ -147,10 +146,11 @@ function flyerStyle(f: Flyer) {
     '--dx': f.dx + 'vw',
     '--dy': f.dy + 'vh',
     animationDuration: f.dur + 'ms',
+    zIndex: f.z,
   } as any;
 }
 
-// 备选图热身（抖动+绕圈）→ 正式飞出
+// 选中备选图 → 螺旋状旋转飞出（无单独热身等待）
 async function spawn() {
   if (warming || !thumbs.value.length) return;
   warming = true;
@@ -162,23 +162,21 @@ async function spawn() {
     warming = false;
     return;
   }
-  warmId.value = t.id;
-  setTimeout(() => {
-    warmId.value = 0;
-    thumbs.value.shift();
-    fillThumbs();
-    current.value = t.item;
-    flyers.value.push({
-      id: ++uid,
-      url,
-      logo: !hasNativeLogoImage(t.item) ? logoUrl(t.item) : '',
-      dx: (Math.random() - 0.5) * 46,
-      dy: (Math.random() - 0.5) * 30,
-      dur: 5200 + Math.random() * 1600,
-      born: Date.now(),
-    });
-    warming = false;
-  }, WARMUP_MS);
+  thumbs.value.shift();
+  fillThumbs();
+  current.value = t.item;
+  const iv = Math.max(4, cfg.value.interval || 8) * 1000;
+  flyers.value.push({
+    id: ++uid,
+    url,
+    logo: !hasNativeLogoImage(t.item) ? logoUrl(t.item) : '',
+    dx: (Math.random() - 0.5) * 30,
+    dy: (Math.random() - 0.5) * 20,
+    dur: Math.round(iv * (0.92 + Math.random() * 0.1)),
+    born: Date.now(),
+    z: 5 + (++zSeq % 40),       // 图层递增：放大时压在所有旧图上
+  });
+  warming = false;
 }
 
 onMounted(() => {
@@ -237,11 +235,17 @@ watch(() => props.items, () => { reshuffle(); thumbs.value = []; fillThumbs(); }
   animation-fill-mode: forwards;
   will-change: transform, opacity;
 }
+/* 螺旋飞出：绕 2 圈、轨道半径随接近而收缩；旋转截止点放大，放大时压在最上层 */
 @keyframes dt-fly {
-  0%   { transform: translate(0, 0) scale(0.05); opacity: 0; }
-  12%  { opacity: 1; }
-  70%  { opacity: 1; }
-  100% { transform: translate(var(--dx), var(--dy)) scale(1.45); opacity: 0; }
+  /* 时间配比：旋转 30%、正向放大 60%（旋转的 2 倍）、淡出 10% */
+  0%   { transform: scale(0.06) rotate(0deg) translate(16vw, -12vh); opacity: 0; }
+  4%   { opacity: 1; }
+  13%  { transform: scale(0.30) rotate(230deg) translate(-9vw, 6vh); }
+  21%  { transform: scale(0.55) rotate(470deg) translate(5vw, 3.5vh); }
+  26%  { transform: scale(0.82) rotate(650deg) translate(-2vw, -1.5vh); }
+  30%  { transform: scale(1) rotate(720deg) translate(0, 0); }
+  90%  { transform: scale(1.15) rotate(720deg) translate(0, 0); opacity: 1; }
+  100% { transform: scale(1.2) rotate(720deg) translate(var(--dx), var(--dy)); opacity: 0; }
 }
 /* 主图保持原始比例：contain，不裁切、不拉伸 */
 .dt-flyer img:not(.dt-logo) {
@@ -283,28 +287,9 @@ watch(() => props.items, () => { reshuffle(); thumbs.value = []; fillThumbs(); }
   object-fit: cover; object-position: center;
   display: block;
 }
-/* 被选中：先抖动再绕 2 圈热身 */
-.dt-thumb.warm {
-  animation: dt-warm 1.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
-  opacity: 1 !important;
-  filter: none !important;
-  border-color: rgba(255,255,255,0.65);
-  z-index: 5;
-}
-@keyframes dt-warm {
-  0%   { transform: translateX(0) rotate(0deg) scale(1); }
-  8%   { transform: translateX(-5px) rotate(0deg) scale(1.08); }
-  16%  { transform: translateX(5px) rotate(0deg) scale(1.1); }
-  24%  { transform: translateX(-4px) rotate(0deg) scale(1.12); }
-  32%  { transform: translateX(3px) rotate(0deg) scale(1.15); }
-  45%  { transform: translateX(0) rotate(260deg) scale(1.2); }
-  70%  { transform: translateX(0) rotate(540deg) scale(1.25); }
-  100% { transform: translateX(0) rotate(720deg) scale(1.3); }
-}
-
 .dt-meta {
   position: absolute; left: 48px; bottom: 42px; max-width: 560px;
-  color: #fff; z-index: 3;
+  color: #fff; z-index: 60;
 }
 .dt-title { font-size: 42px; font-weight: 700; text-shadow: 0 2px 14px rgba(0,0,0,.8); }
 .dt-sub { font-size: 15px; opacity: .8; margin-top: 6px; }
@@ -313,5 +298,6 @@ watch(() => props.items, () => { reshuffle(); thumbs.value = []; fillThumbs(); }
 .dt-vignette {
   position: absolute; inset: 0; pointer-events: none; z-index: 2;
   background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,.6) 100%);
+  z-index: 50;
 }
 </style>

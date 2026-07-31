@@ -88,7 +88,7 @@ class FullScreenPosterWall(_PluginBase):
     plugin_name = "全屏海报墙"
     plugin_desc = "抓取 MoviePilot 推荐媒体（流行趋势/TMDB热门电影/TMDB热门电视剧）的海报图片，以照片/拼贴/纵深穿梭/滑动面板/浮动/怀旧冲印/光舞等多种动效全屏展示，支持局域网海报墙页面。"
     plugin_icon = "fullscreenposterwall.png"
-    plugin_version = "1.11.0"
+    plugin_version = "1.13.0"
     plugin_label = "媒体展示"
     plugin_author = "edmond"
     plugin_config_prefix = "fullscreenposterwall_"

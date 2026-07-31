@@ -24,7 +24,7 @@ function pickLogoUrl(item, domain) {
 
 const {defineComponent:_defineComponent$7} = await importShared('vue');
 
-const {createElementVNode:_createElementVNode$6,unref:_unref$6,openBlock:_openBlock$7,createElementBlock:_createElementBlock$7,createCommentVNode:_createCommentVNode$7,toDisplayString:_toDisplayString$6,createTextVNode:_createTextVNode$3,normalizeClass:_normalizeClass$5,Transition:_Transition$1,withCtx:_withCtx$1,createVNode:_createVNode$1} = await importShared('vue');
+const {createElementVNode:_createElementVNode$6,unref:_unref$6,openBlock:_openBlock$7,createElementBlock:_createElementBlock$7,createCommentVNode:_createCommentVNode$7,toDisplayString:_toDisplayString$6,createTextVNode:_createTextVNode$3,normalizeClass:_normalizeClass$4,Transition:_Transition$1,withCtx:_withCtx$1,createVNode:_createVNode$1} = await importShared('vue');
 
 const _hoisted_1$7 = { class: "photos-root" };
 const _hoisted_2$7 = ["src"];
@@ -111,7 +111,7 @@ const _sfc_main$7 = /* @__PURE__ */ _defineComponent$7({
               }, null, 8, _hoisted_2$7),
               _createElementVNode$6("div", _hoisted_3$7, [
                 _createElementVNode$6("div", {
-                  class: _normalizeClass$5(["photo-meta", { "meta-center": logoWide.value }])
+                  class: _normalizeClass$4(["photo-meta", { "meta-center": logoWide.value }])
                 }, [
                   __props.imageType === "logo" && !_unref$6(hasNativeLogoImage)(current.value) && logoUrl(current.value) ? (_openBlock$7(), _createElementBlock$7("img", {
                     key: 0,
@@ -294,7 +294,7 @@ const Floating = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["__scopeId", "data-v
 
 const {defineComponent:_defineComponent$5} = await importShared('vue');
 
-const {normalizeStyle:_normalizeStyle$5,createElementVNode:_createElementVNode$4,unref:_unref$4,openBlock:_openBlock$5,createElementBlock:_createElementBlock$5,createCommentVNode:_createCommentVNode$5,toDisplayString:_toDisplayString$4,normalizeClass:_normalizeClass$4,Transition:_Transition,withCtx:_withCtx,createVNode:_createVNode} = await importShared('vue');
+const {normalizeStyle:_normalizeStyle$5,createElementVNode:_createElementVNode$4,unref:_unref$4,openBlock:_openBlock$5,createElementBlock:_createElementBlock$5,createCommentVNode:_createCommentVNode$5,toDisplayString:_toDisplayString$4,normalizeClass:_normalizeClass$3,Transition:_Transition,withCtx:_withCtx,createVNode:_createVNode} = await importShared('vue');
 
 const _hoisted_1$5 = { class: "vintage-root" };
 const _hoisted_2$5 = ["src"];
@@ -412,7 +412,7 @@ const _sfc_main$5 = /* @__PURE__ */ _defineComponent$5({
               }, null, 512),
               _createElementVNode$4("div", _hoisted_3$5, [
                 _createElementVNode$4("div", {
-                  class: _normalizeClass$4(["vintage-meta", { "meta-center": logoWide.value }])
+                  class: _normalizeClass$3(["vintage-meta", { "meta-center": logoWide.value }])
                 }, [
                   __props.imageType === "logo" && !_unref$4(hasNativeLogoImage)(current.value) && logoUrl(current.value) ? (_openBlock$5(), _createElementBlock$5("img", {
                     key: 0,
@@ -438,7 +438,7 @@ const VintagePrints = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["__scopeId", "d
 
 const {defineComponent:_defineComponent$4} = await importShared('vue');
 
-const {openBlock:_openBlock$4,createElementBlock:_createElementBlock$4,createCommentVNode:_createCommentVNode$4,createElementVNode:_createElementVNode$3,renderList:_renderList$4,Fragment:_Fragment$4,normalizeStyle:_normalizeStyle$4,unref:_unref$3,toDisplayString:_toDisplayString$3,createTextVNode:_createTextVNode$2,normalizeClass:_normalizeClass$3} = await importShared('vue');
+const {openBlock:_openBlock$4,createElementBlock:_createElementBlock$4,createCommentVNode:_createCommentVNode$4,createElementVNode:_createElementVNode$3,renderList:_renderList$4,Fragment:_Fragment$4,normalizeStyle:_normalizeStyle$4,unref:_unref$3,toDisplayString:_toDisplayString$3,createTextVNode:_createTextVNode$2,normalizeClass:_normalizeClass$2} = await importShared('vue');
 
 const _hoisted_1$4 = ["src"];
 const _hoisted_2$4 = { class: "light-orbs" };
@@ -562,7 +562,7 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
         _cache[1] || (_cache[1] = _createElementVNode$3("div", { class: "light-vignette" }, null, -1)),
         current.value ? (_openBlock$4(), _createElementBlock$4("div", {
           key: 1,
-          class: _normalizeClass$3(["light-meta", { "meta-center": logoWide.value }])
+          class: _normalizeClass$2(["light-meta", { "meta-center": logoWide.value }])
         }, [
           __props.imageType === "logo" && !_unref$3(hasNativeLogoImage)(current.value) && logoUrl(current.value) ? (_openBlock$4(), _createElementBlock$4("img", {
             key: 0,
@@ -832,7 +832,7 @@ const ShiftingTiles = /* @__PURE__ */ _export_sfc(_sfc_main$3, [["__scopeId", "d
 
 const {defineComponent:_defineComponent$2} = await importShared('vue');
 
-const {renderList:_renderList$2,Fragment:_Fragment$2,openBlock:_openBlock$2,createElementBlock:_createElementBlock$2,createCommentVNode:_createCommentVNode$2,unref:_unref$2,toDisplayString:_toDisplayString$2,normalizeClass:_normalizeClass$2,normalizeStyle:_normalizeStyle$2} = await importShared('vue');
+const {renderList:_renderList$2,Fragment:_Fragment$2,openBlock:_openBlock$2,createElementBlock:_createElementBlock$2,createCommentVNode:_createCommentVNode$2,unref:_unref$2,toDisplayString:_toDisplayString$2,normalizeClass:_normalizeClass$1,normalizeStyle:_normalizeStyle$2} = await importShared('vue');
 
 const _hoisted_1$2 = { class: "panels-root" };
 const _hoisted_2$2 = ["src"];
@@ -958,7 +958,7 @@ const _sfc_main$2 = /* @__PURE__ */ _defineComponent$2({
         (_openBlock$2(true), _createElementBlock$2(_Fragment$2, null, _renderList$2(panels.value, (p, i) => {
           return _openBlock$2(), _createElementBlock$2("div", {
             key: `${layoutIdx.value}-${i}`,
-            class: _normalizeClass$2(["panel-col", [`dir-${p.dir}`, { exiting: p.exiting, entering: p.entering }]]),
+            class: _normalizeClass$1(["panel-col", [`dir-${p.dir}`, { exiting: p.exiting, entering: p.entering }]]),
             style: _normalizeStyle$2({ flexBasis: p.width * 100 + "%" })
           }, [
             p.url ? (_openBlock$2(), _createElementBlock$2("img", {
@@ -985,7 +985,7 @@ const SlidingPanels = /* @__PURE__ */ _export_sfc(_sfc_main$2, [["__scopeId", "d
 
 const {defineComponent:_defineComponent$1} = await importShared('vue');
 
-const {renderList:_renderList$1,Fragment:_Fragment$1,openBlock:_openBlock$1,createElementBlock:_createElementBlock$1,createCommentVNode:_createCommentVNode$1,normalizeClass:_normalizeClass$1,normalizeStyle:_normalizeStyle$1,createElementVNode:_createElementVNode$1,unref:_unref$1,toDisplayString:_toDisplayString$1,createTextVNode:_createTextVNode$1} = await importShared('vue');
+const {createElementVNode:_createElementVNode$1,renderList:_renderList$1,Fragment:_Fragment$1,openBlock:_openBlock$1,createElementBlock:_createElementBlock$1,createCommentVNode:_createCommentVNode$1,normalizeClass:_normalizeClass,normalizeStyle:_normalizeStyle$1,unref:_unref$1,toDisplayString:_toDisplayString$1,createTextVNode:_createTextVNode$1} = await importShared('vue');
 
 const _hoisted_1$1 = { class: "ring-root" };
 const _hoisted_2$1 = { class: "ring-stage" };
@@ -1112,6 +1112,10 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
     watch$1(() => props.items, build, { deep: true });
     return (_ctx, _cache) => {
       return _openBlock$1(), _createElementBlock$1("div", _hoisted_1$1, [
+        _cache[0] || (_cache[0] = _createElementVNode$1("div", { class: "rg-aurora a1" }, null, -1)),
+        _cache[1] || (_cache[1] = _createElementVNode$1("div", { class: "rg-aurora a2" }, null, -1)),
+        _cache[2] || (_cache[2] = _createElementVNode$1("div", { class: "rg-dust d1" }, null, -1)),
+        _cache[3] || (_cache[3] = _createElementVNode$1("div", { class: "rg-dust d2" }, null, -1)),
         _createElementVNode$1("div", _hoisted_2$1, [
           _createElementVNode$1("div", {
             class: "ring",
@@ -1120,7 +1124,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
             (_openBlock$1(true), _createElementBlock$1(_Fragment$1, null, _renderList$1(cards.value, (c, i) => {
               return _openBlock$1(), _createElementBlock$1("div", {
                 key: i,
-                class: _normalizeClass$1(["ring-card", { front: i === frontIndex.value }]),
+                class: _normalizeClass(["ring-card", { front: i === frontIndex.value }]),
                 style: _normalizeStyle$1(cardStyle(i))
               }, [
                 c.url ? (_openBlock$1(), _createElementBlock$1("img", {
@@ -1140,12 +1144,12 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
             }), 128))
           ], 4)
         ]),
-        _cache[0] || (_cache[0] = _createElementVNode$1("div", { class: "ring-floor" }, null, -1)),
+        _cache[4] || (_cache[4] = _createElementVNode$1("div", { class: "ring-floor" }, null, -1)),
         front.value ? (_openBlock$1(), _createElementBlock$1("div", _hoisted_5$1, [
           imageType.value === "logo" && !_unref$1(hasNativeLogoImage)(front.value) && logoUrl(front.value) ? (_openBlock$1(), _createElementBlock$1("img", {
             key: 0,
             src: logoUrl(front.value),
-            class: _normalizeClass$1(["meta-logo", { "meta-center": logoWide.value }]),
+            class: _normalizeClass(["meta-logo", { "meta-center": logoWide.value }]),
             alt: "",
             onLoad: onLogoLoad
           }, null, 42, _hoisted_6$1)) : (_openBlock$1(), _createElementBlock$1(_Fragment$1, { key: 1 }, [
@@ -1158,17 +1162,17 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
           ], 64)),
           front.value.overview ? (_openBlock$1(), _createElementBlock$1("div", _hoisted_10$1, _toDisplayString$1(trimOverview(front.value.overview, 110)), 1)) : _createCommentVNode$1("", true)
         ])) : _createCommentVNode$1("", true),
-        _cache[1] || (_cache[1] = _createElementVNode$1("div", { class: "ring-vignette" }, null, -1))
+        _cache[5] || (_cache[5] = _createElementVNode$1("div", { class: "ring-vignette" }, null, -1))
       ]);
     };
   }
 });
 
-const RingGallery = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-7ff1dca9"]]);
+const RingGallery = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-13a54594"]]);
 
 const {defineComponent:_defineComponent} = await importShared('vue');
 
-const {createElementVNode:_createElementVNode,renderList:_renderList,Fragment:_Fragment,openBlock:_openBlock,createElementBlock:_createElementBlock,createCommentVNode:_createCommentVNode,normalizeStyle:_normalizeStyle,normalizeClass:_normalizeClass,unref:_unref,toDisplayString:_toDisplayString,createTextVNode:_createTextVNode} = await importShared('vue');
+const {createElementVNode:_createElementVNode,renderList:_renderList,Fragment:_Fragment,openBlock:_openBlock,createElementBlock:_createElementBlock,createCommentVNode:_createCommentVNode,normalizeStyle:_normalizeStyle,unref:_unref,toDisplayString:_toDisplayString,createTextVNode:_createTextVNode} = await importShared('vue');
 
 const _hoisted_1 = { class: "dt-root" };
 const _hoisted_2 = ["src"];
@@ -1185,7 +1189,6 @@ const _hoisted_9 = { class: "dt-sub" };
 const _hoisted_10 = { key: 0 };
 const {ref,watch,onMounted,onBeforeUnmount} = await importShared('vue');
 const THUMBS_N = 9;
-const WARMUP_MS = 1300;
 const _sfc_main = /* @__PURE__ */ _defineComponent({
   __name: "DepthTunnel",
   props: {
@@ -1204,9 +1207,9 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     watch(() => props.imageType, (v) => {
       imageType.value = v || "backdrop";
     });
+    let zSeq = 0;
     const flyers = ref([]);
     const thumbs = ref([]);
-    const warmId = ref(0);
     const current = ref(null);
     let uid = 0;
     let queue = [];
@@ -1287,7 +1290,8 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       return {
         "--dx": f.dx + "vw",
         "--dy": f.dy + "vh",
-        animationDuration: f.dur + "ms"
+        animationDuration: f.dur + "ms",
+        zIndex: f.z
       };
     }
     async function spawn() {
@@ -1301,23 +1305,22 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         warming = false;
         return;
       }
-      warmId.value = t.id;
-      setTimeout(() => {
-        warmId.value = 0;
-        thumbs.value.shift();
-        fillThumbs();
-        current.value = t.item;
-        flyers.value.push({
-          id: ++uid,
-          url,
-          logo: !hasNativeLogoImage(t.item) ? logoUrl(t.item) : "",
-          dx: (Math.random() - 0.5) * 46,
-          dy: (Math.random() - 0.5) * 30,
-          dur: 5200 + Math.random() * 1600,
-          born: Date.now()
-        });
-        warming = false;
-      }, WARMUP_MS);
+      thumbs.value.shift();
+      fillThumbs();
+      current.value = t.item;
+      const iv = Math.max(4, cfg.value.interval || 8) * 1e3;
+      flyers.value.push({
+        id: ++uid,
+        url,
+        logo: !hasNativeLogoImage(t.item) ? logoUrl(t.item) : "",
+        dx: (Math.random() - 0.5) * 30,
+        dy: (Math.random() - 0.5) * 20,
+        dur: Math.round(iv * (0.92 + Math.random() * 0.1)),
+        born: Date.now(),
+        z: 5 + ++zSeq % 40
+        // 图层递增：放大时压在所有旧图上
+      });
+      warming = false;
     }
     onMounted(() => {
       reshuffle();
@@ -1379,7 +1382,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
           (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(thumbs.value, (t) => {
             return _openBlock(), _createElementBlock("div", {
               key: t.id,
-              class: _normalizeClass(["dt-thumb", { warm: t.id === warmId.value }]),
+              class: "dt-thumb",
               style: _normalizeStyle(thumbStyle(t))
             }, [
               t.url ? (_openBlock(), _createElementBlock("img", {
@@ -1388,7 +1391,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                 alt: "",
                 draggable: "false"
               }, null, 8, _hoisted_5)) : _createCommentVNode("", true)
-            ], 6);
+            ], 4);
           }), 128))
         ]),
         current.value ? (_openBlock(), _createElementBlock("div", _hoisted_6, [
@@ -1413,6 +1416,6 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
   }
 });
 
-const DepthTunnel = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-b16820b1"]]);
+const DepthTunnel = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-399e34d7"]]);
 
 export { DepthTunnel as D, Floating as F, LightDance as L, PhotosSlideshow as P, RingGallery as R, SlidingPanels as S, VintagePrints as V, ShiftingTiles as a };
