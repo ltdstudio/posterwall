@@ -1,10 +1,12 @@
-# MoviePilot-Plugins (edmond)
+# posterwall — MoviePilot V2 插件仓库 (ltdstudio)
 
 MoviePilot V2 第三方插件仓库。
 
 ## 插件列表
 
 ### 全屏海报墙 FullScreenPosterWall
+
+这是一个全屏海报墙插件，让所有终端可以播放精美的电影海报。
 
 抓取 MoviePilot 推荐媒体（流行趋势 / TMDB 热门电影 / TMDB 热门电视剧）的海报图片，以多种动效全屏展示：
 
