@@ -28,7 +28,7 @@ MoviePilot V2 第三方插件仓库。
 1. 在 MoviePilot `环境变量` 的 `PLUGIN_MARKET` 中追加本仓库地址（V2 也可在 插件 → 插件市场设置 中添加）：
 
    ```
-   https://github.com/<你的用户名>/MoviePilot-Plugins
+   https://github.com/ltdstudio/posterwall
    ```
 
 2. 重启 MoviePilot 后，进入 **插件市场** 找到「全屏海报墙」安装即可。
