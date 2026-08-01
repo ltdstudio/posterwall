@@ -15,16 +15,58 @@
         启用后，插件详情页（Page）会提供全屏海报墙入口。
       </v-alert>
 
-      <v-select
-        v-model="local.sources"
-        :items="sourceOptions"
-        label="推荐数据源（多选）"
-        multiple
-        chips
-        closable-chips
-        density="comfortable"
-        class="mb-3"
-      />
+      <div class="mb-3">
+        <div class="d-flex align-center mb-1">
+          <span class="text-subtitle-2">推荐数据源（每个来源分别勾选电影/电视剧）</span>
+          <v-progress-circular
+            v-if="sourcesLoading"
+            indeterminate size="16" width="2" class="ml-2"
+          />
+        </div>
+        <v-alert
+          v-if="sourcesError"
+          type="warning" variant="tonal" density="compact" class="mb-2"
+        >
+          {{ sourcesError }}
+        </v-alert>
+        <div
+          v-for="s in sourceList"
+          :key="s.api_path"
+          class="d-flex align-center source-row"
+        >
+          <v-checkbox
+            :model-value="isSourceOn(s.api_path)"
+            hide-details density="compact" class="source-enable"
+            @update:model-value="v => toggleSource(s, v)"
+          />
+          <span class="source-name">
+            {{ s.name }}
+            <v-chip
+              v-if="!s.builtin"
+              size="x-small" color="purple" variant="tonal" class="ml-1"
+            >第三方</v-chip>
+            <span class="source-nat text-grey">{{ natLabel(s.nat) }}</span>
+          </span>
+          <v-spacer />
+          <v-checkbox
+            label="电影"
+            :model-value="hasType(s.api_path, 'movie')"
+            :disabled="!isSourceOn(s.api_path)"
+            hide-details density="compact" class="type-check"
+            @update:model-value="v => toggleType(s.api_path, 'movie', v)"
+          />
+          <v-checkbox
+            label="电视剧"
+            :model-value="hasType(s.api_path, 'tv')"
+            :disabled="!isSourceOn(s.api_path)"
+            hide-details density="compact" class="type-check"
+            @update:model-value="v => toggleType(s.api_path, 'tv', v)"
+          />
+        </div>
+        <div v-if="!sourcesLoading && !sourceList.length && !sourcesError" class="text-grey text-caption">
+          未发现可用数据源
+        </div>
+      </div>
 
       <v-select
         v-model="local.effect"
@@ -128,7 +170,7 @@
 // 保存完全交给宿主前端（emit('save', cfg)），宿主会用 api.put('plugin/{id}', cfg)
 // 持久化。在 baseURL='api/v1/' 的 axios 下，绝对不能在组件里写 'api/v1/plugin/...'，
 // 否则会变成 'api/v1/api/v1/plugin/...'（404 双前缀）。
-import { reactive, onMounted } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 
 const props = defineProps({
   initialConfig: {
@@ -139,11 +181,18 @@ const props = defineProps({
 
 const emit = defineEmits(['save', 'close'])
 
-const sourceOptions = [
-  { title: '流行趋势', value: 'trending' },
-  { title: 'TMDB热门电影', value: 'tmdb_movies' },
-  { title: 'TMDB热门电视剧', value: 'tmdb_tvs' },
-]
+// 与 Page.vue 相同：宿主把主框架 axios 挂在 window.MoviePilotAPI 上，
+// baseURL 已是 api/v1/，插件内路径用 'plugin/FullScreenPosterWall/...'。
+const API_BASE = 'plugin/FullScreenPosterWall'
+function getApi() {
+  return (typeof window !== 'undefined' ? window.MoviePilotAPI : null)
+}
+
+const defaultSourceConfig = {
+  'recommend/tmdb_trending': ['movie', 'tv'],
+  'recommend/tmdb_movies': ['movie', 'tv'],
+  'recommend/tmdb_tvs': ['movie', 'tv'],
+}
 const effectOptions = [
   { title: '照片 (Photos) — 幻灯片', value: 'photos' },
   { title: '流动拼贴 (Shifting Tiles)', value: 'shiftingtiles' },
@@ -164,7 +213,7 @@ const imageTypeOptions = [
 
 const defaults = {
   enabled: false,
-  sources: ['trending', 'tmdb_movies', 'tmdb_tvs'],
+  source_config: { ...defaultSourceConfig },
   effect: 'photos',
   image_type: 'backdrop',
   interval: 8,
@@ -178,6 +227,71 @@ const defaults = {
 
 const local = reactive({ ...defaults })
 
+// ─── 动态数据源列表 ───────────────────────────────────────
+const sourceList = ref([])
+const sourcesLoading = ref(false)
+const sourcesError = ref('')
+
+function natLabel(nat) {
+  return nat === 'movie' ? '电影源' : nat === 'tv' ? '剧集源' : '混合源'
+}
+function isSourceOn(apiPath) {
+  const t = local.source_config?.[apiPath]
+  return Array.isArray(t) && t.length > 0
+}
+function hasType(apiPath, type) {
+  const t = local.source_config?.[apiPath]
+  return Array.isArray(t) && t.includes(type)
+}
+function toggleSource(s, on) {
+  const cfg = { ...(local.source_config || {}) }
+  if (on) {
+    // 按来源天然类型给默认勾选：混合源全开，单类型源只开对应侧
+    cfg[s.api_path] = s.nat === 'movie' ? ['movie'] : s.nat === 'tv' ? ['tv'] : ['movie', 'tv']
+  } else {
+    delete cfg[s.api_path]
+  }
+  local.source_config = cfg
+}
+function toggleType(apiPath, type, on) {
+  const cfg = { ...(local.source_config || {}) }
+  const cur = new Set(Array.isArray(cfg[apiPath]) ? cfg[apiPath] : [])
+  if (on) cur.add(type)
+  else cur.delete(type)
+  const arr = ['movie', 'tv'].filter(t => cur.has(t))
+  if (arr.length) cfg[apiPath] = arr
+  else delete cfg[apiPath] // 两侧都取消 = 停用该源
+  local.source_config = cfg
+}
+
+async function loadSources() {
+  const api = getApi()
+  if (!api) {
+    sourcesError.value = '宿主 API 未就绪，数据源列表加载失败（保存不受影响）'
+    return
+  }
+  sourcesLoading.value = true
+  sourcesError.value = ''
+  try {
+    const raw = await api.get(`${API_BASE}/sources`)
+    const payload = raw?.data ?? raw
+    if (payload?.success) {
+      sourceList.value = payload.data?.sources || []
+      // 后端返回的当前选择优先于 initialConfig（权威状态）
+      const sel = payload.data?.selected
+      if (sel && Object.keys(sel).length) {
+        local.source_config = sel
+      }
+    } else {
+      sourcesError.value = payload?.message || '数据源列表加载失败（保存不受影响）'
+    }
+  } catch (e) {
+    sourcesError.value = '数据源列表加载失败（保存不受影响）'
+  } finally {
+    sourcesLoading.value = false
+  }
+}
+
 onMounted(() => {
   // 用宿主传入的 initialConfig 覆盖默认值
   const ic = props.initialConfig
@@ -186,6 +300,7 @@ onMounted(() => {
       if (ic[k] !== undefined) local[k] = ic[k]
     })
   }
+  loadSources()
 })
 
 function onSave() {
@@ -201,4 +316,9 @@ function onReset() {
 <style scoped>
 .fspw-config-root { width: 100%; }
 .gap-2 > * + * { margin-left: 8px; }
+.source-row { min-height: 36px; }
+.source-enable { flex: 0 0 auto; margin-right: 4px; }
+.source-name { font-size: 0.875rem; }
+.source-nat { font-size: 0.75rem; margin-left: 6px; }
+.type-check { flex: 0 0 auto; margin-left: 8px; }
 </style>

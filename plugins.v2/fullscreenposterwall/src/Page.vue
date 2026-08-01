@@ -186,7 +186,7 @@ function getApi() {
 // ─── 状态 ─────────────────────────────────────────────────
 const config = ref({
   enabled: false,
-  sources: ['trending', 'tmdb_movies', 'tmdb_tvs'],
+  source_config: {},
   effect: 'photos',
   image_type: 'backdrop',
   interval: 8,

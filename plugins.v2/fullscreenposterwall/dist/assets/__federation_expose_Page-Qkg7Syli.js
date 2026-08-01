@@ -83,7 +83,7 @@ function getApi() {
 // ─── 状态 ─────────────────────────────────────────────────
 const config = ref({
   enabled: false,
-  sources: ['trending', 'tmdb_movies', 'tmdb_tvs'],
+  source_config: {},
   effect: 'photos',
   image_type: 'backdrop',
   interval: 8,
@@ -495,6 +495,6 @@ return (_ctx, _cache) => {
 }
 
 };
-const Page = /*#__PURE__*/_export_sfc(_sfc_main, [['__scopeId',"data-v-1c9a421d"]]);
+const Page = /*#__PURE__*/_export_sfc(_sfc_main, [['__scopeId',"data-v-681c4c64"]]);
 
 export { Page as default };

@@ -6,13 +6,11 @@
 """
 from __future__ import annotations
 
-import asyncio
 import socket
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.chain.recommend import RecommendChain
 from app.plugins import _PluginBase
-from app.schemas import MediaInfo
 from app.schemas.types import MediaType
 from fastapi import Request
 
@@ -88,16 +86,36 @@ class FullScreenPosterWall(_PluginBase):
     plugin_name = "全屏海报墙"
     plugin_desc = "这是一个全屏海报墙插件，让所有终端可以播放精美的电影海报。抓取 MoviePilot 推荐媒体（流行趋势/TMDB热门电影/TMDB热门电视剧）的海报图片，以照片/拼贴/纵深穿梭/滑动面板/浮动/怀旧冲印/光舞等多种动效全屏展示，支持局域网海报墙页面。"
     plugin_icon = "https://raw.githubusercontent.com/ltdstudio/posterwall/main/icons/fullscreenposterwall.png"
-    plugin_version = "1.14.5"
+    plugin_version = "1.15.0"
     plugin_label = "媒体展示"
     plugin_author = "ltdstudio"
     plugin_config_prefix = "fullscreenposterwall_"
     plugin_order = 50
     auth_level = 1
 
+    # 内置推荐数据源目录：(api_path, 名称, RecommendChain 方法名, 天然类型 movie/tv/mixed)
+    # 与 MoviePilot 工作流「获取媒体数据」动作的内置清单一致；
+    # 运行时按 hasattr 逐个校验，系统升级增减方法时自动跟随。
+    _BUILTIN_SOURCES: Tuple[Tuple[str, str, str, str], ...] = (
+        ("recommend/tmdb_trending", "流行趋势", "tmdb_trending", "mixed"),
+        ("recommend/douban_showing", "正在热映", "douban_movie_showing", "movie"),
+        ("recommend/bangumi_calendar", "Bangumi每日放送", "bangumi_calendar", "tv"),
+        ("recommend/tmdb_movies", "TMDB热门电影", "tmdb_movies", "movie"),
+        ("recommend/tmdb_tvs", "TMDB热门电视剧", "tmdb_tvs", "tv"),
+        ("recommend/douban_movie_hot", "豆瓣热门电影", "douban_movie_hot", "movie"),
+        ("recommend/douban_tv_hot", "豆瓣热门电视剧", "douban_tv_hot", "tv"),
+        ("recommend/douban_tv_animation", "豆瓣热门动漫", "douban_tv_animation", "tv"),
+        ("recommend/douban_movies", "豆瓣最新电影", "douban_movies", "movie"),
+        ("recommend/douban_tvs", "豆瓣最新电视剧", "douban_tvs", "tv"),
+        ("recommend/douban_movie_top250", "豆瓣电影TOP250", "douban_movie_top250", "movie"),
+        ("recommend/douban_tv_weekly_chinese", "豆瓣国产剧集榜", "douban_tv_weekly_chinese", "tv"),
+        ("recommend/douban_tv_weekly_global", "豆瓣全球剧集榜", "douban_tv_weekly_global", "tv"),
+    )
+
     # ─── 运行时状态 ─────────────────────────────────────────
     _enabled: bool = False
-    _sources: List[str] = []
+    # 动态推荐数据源：{api_path: ["movie"/"tv", ...]}，值为空列表 = 停用该源
+    _source_config: Dict[str, List[str]] = {}
     _effect: str = "photos"
     _interval: int = 8
     _image_type: str = "backdrop"
@@ -123,10 +141,7 @@ class FullScreenPosterWall(_PluginBase):
             return
 
         self._enabled = bool(config.get("enabled", False))
-        sources = config.get("sources") or ["trending", "tmdb_movies", "tmdb_tvs"]
-        if isinstance(sources, str):
-            sources = [s for s in sources.split(",") if s]
-        self._sources = list(sources)
+        self._source_config = self._normalize_source_config(config)
         self._effect = str(config.get("effect") or "photos")
         try:
             self._interval = max(3, min(30, int(config.get("interval") or 8)))
@@ -159,11 +174,186 @@ class FullScreenPosterWall(_PluginBase):
         """
         return [], self._default_config()
 
+    @classmethod
+    def _default_source_config(cls) -> Dict[str, List[str]]:
+        """默认启用的数据源（对应旧版 trending/tmdb_movies/tmdb_tvs）。"""
+        return {
+            "recommend/tmdb_trending": ["movie", "tv"],
+            "recommend/tmdb_movies": ["movie", "tv"],
+            "recommend/tmdb_tvs": ["movie", "tv"],
+        }
+
+    # 旧版 sources 简写 → api_path 映射（配置迁移用）
+    _LEGACY_SOURCE_MAP: Dict[str, str] = {
+        "trending": "recommend/tmdb_trending",
+        "tmdb_movies": "recommend/tmdb_movies",
+        "tmdb_tvs": "recommend/tmdb_tvs",
+    }
+
+    @classmethod
+    def _normalize_source_config(cls, config: Dict[str, Any]) -> Dict[str, List[str]]:
+        """把配置里的数据源选择规整为 {api_path: [movie/tv]}。
+
+        兼容三种历史形态：
+          1. 新版 source_config dict —— 直接使用（非法值剔除）；
+          2. 旧版 sources list/str（trending 等简写）—— 映射迁移；
+          3. 啥都没有 —— 默认三源。
+        """
+        raw = config.get("source_config")
+        if isinstance(raw, dict) and raw:
+            result: Dict[str, List[str]] = {}
+            for api_path, types in raw.items():
+                if not isinstance(api_path, str) or not api_path:
+                    continue
+                if isinstance(types, str):
+                    types = [t for t in types.split(",") if t]
+                if not isinstance(types, list):
+                    types = []
+                clean = [t for t in types if t in ("movie", "tv")]
+                if clean:
+                    result[api_path] = clean
+            if result:
+                return result
+        legacy = config.get("sources")
+        if isinstance(legacy, str):
+            legacy = [s for s in legacy.split(",") if s]
+        if isinstance(legacy, list) and legacy:
+            result = {}
+            for s in legacy:
+                api_path = cls._LEGACY_SOURCE_MAP.get(str(s)) or (
+                    str(s) if str(s).startswith(("recommend/", "plugin/")) else None
+                )
+                if api_path:
+                    result[api_path] = ["movie", "tv"]
+            if result:
+                return result
+        return cls._default_source_config()
+
+    # ─── 动态推荐数据源 ─────────────────────────────────────
+    def _available_sources(self) -> List[Dict[str, Any]]:
+        """枚举当前系统可用的推荐数据源（动态）。
+
+        内置源：按 _BUILTIN_SOURCES 目录逐个 hasattr 校验 RecommendChain
+        （MoviePilot 升级增减方法时自动跟随）；
+        第三方源：广播 ChainEventType.RecommendSource 事件，
+        其他插件（如 IMDb源）注册的源自动出现，卸载后自动消失。
+        """
+        sources: List[Dict[str, Any]] = []
+        chain = self._recommend_chain or RecommendChain()
+        for api_path, name, method, nat in self._BUILTIN_SOURCES:
+            if hasattr(chain, method):
+                sources.append({
+                    "api_path": api_path,
+                    "name": name,
+                    "builtin": True,
+                    "nat": nat,
+                })
+        try:
+            from app.core.event import eventmanager
+            from app.schemas import RecommendSourceEventData
+            from app.schemas.types import ChainEventType
+
+            event_data = RecommendSourceEventData()
+            event = eventmanager.send_event(
+                ChainEventType.RecommendSource, event_data
+            )
+            if event and event.event_data:
+                extras = getattr(event.event_data, "extra_sources", None) or []
+                for s in extras:
+                    api_path = getattr(s, "api_path", None) or (
+                        s.get("api_path") if isinstance(s, dict) else None
+                    )
+                    name = getattr(s, "name", None) or (
+                        s.get("name") if isinstance(s, dict) else None
+                    )
+                    category = getattr(s, "type", None) or (
+                        s.get("type") if isinstance(s, dict) else ""
+                    ) or ""
+                    if not api_path or not name:
+                        continue
+                    if any(x["api_path"] == api_path for x in sources):
+                        continue
+                    cat = str(category).lower()
+                    nat = ("movie" if "movie" in cat
+                           else "tv" if ("tv" in cat or "anime" in cat)
+                           else "mixed")
+                    sources.append({
+                        "api_path": api_path,
+                        "name": str(name),
+                        "builtin": False,
+                        "nat": nat,
+                    })
+        except Exception:
+            pass
+        return sources
+
+    def api_get_sources(self) -> Dict[str, Any]:
+        """供配置页动态渲染：可用数据源 + 当前选择。"""
+        try:
+            return {
+                "success": True,
+                "data": {
+                    "sources": self._available_sources(),
+                    "selected": self._source_config
+                    or self._default_source_config(),
+                },
+            }
+        except Exception as e:
+            return {"success": False, "message": str(e)}
+
+    def _fetch_source_dicts(
+        self, api_path: str, page: int = 1
+    ) -> List[Dict[str, Any]]:
+        """按 api_path 拉取一页推荐数据（dict 列表）。
+
+        内置源直接调 RecommendChain 同步方法；第三方插件源走内部 API
+        （与 MoviePilot 工作流「获取媒体数据」动作同一套做法）。
+        """
+        for bp, _name, method, _nat in self._BUILTIN_SOURCES:
+            if bp == api_path:
+                chain = self._recommend_chain or RecommendChain()
+                func = getattr(chain, method, None)
+                if not func:
+                    return []
+                result = func(page=page) or []
+                return [dict(x) for x in result if isinstance(x, dict)]
+        # 第三方插件源：内部 API 调用
+        try:
+            from app.core.config import settings
+            from app.utils.http import RequestUtils
+
+            sep = "&" if "?" in api_path else "?"
+            url = (
+                f"http://127.0.0.1:{settings.PORT}/api/v1/{api_path}"
+                f"{sep}token={settings.API_TOKEN}"
+            )
+            # 第三方插件源路由多为 GET-only（如 IMDb源），POST 会 405
+            res = RequestUtils(timeout=15).get_res(url)
+            if res:
+                data = res.json()
+                if isinstance(data, list):
+                    return [x for x in data if isinstance(x, dict)]
+        except Exception:
+            pass
+        return []
+
+    @staticmethod
+    def _match_types(item: Dict[str, Any], types: List[str]) -> bool:
+        """条目类型是否命中所选（type 缺失时放行，避免误杀）。"""
+        t = str(item.get("type") or "")
+        if not t:
+            return True
+        if "电影" in t:
+            return "movie" in types
+        if "电视剧" in t or "剧集" in t:
+            return "tv" in types
+        return True
+
     @staticmethod
     def _default_config() -> Dict[str, Any]:
         return {
             "enabled": False,
-            "sources": ["trending", "tmdb_movies", "tmdb_tvs"],
+            "source_config": FullScreenPosterWall._default_source_config(),
             "effect": "photos",
             "image_type": "backdrop",
             "interval": 8,
@@ -247,6 +437,13 @@ class FullScreenPosterWall(_PluginBase):
                 "endpoint": self.api_update_config,
                 "methods": ["PUT"],
                 "summary": "更新插件配置",
+                "auth": "bear",
+            },
+            {
+                "path": "/sources",
+                "endpoint": self.api_get_sources,
+                "methods": ["GET"],
+                "summary": "枚举可用推荐数据源（内置+第三方动态）",
                 "auth": "bear",
             },
             {
@@ -369,7 +566,8 @@ class FullScreenPosterWall(_PluginBase):
         """返回给前端 Vue 的运行时配置。"""
         return {
             "enabled": self._enabled,
-            "sources": self._sources,
+            "source_config": self._source_config
+            or self._default_source_config(),
             "effect": self._effect,
             "interval": self._interval,
             "image_type": self._image_type,
@@ -390,10 +588,8 @@ class FullScreenPosterWall(_PluginBase):
             return {"success": False, "message": "请求体不是合法对象"}
         merged = {**self.api_get_config(), **config}
         merged["enabled"] = bool(merged.get("enabled", False))
-        if isinstance(merged.get("sources"), str):
-            merged["sources"] = [s for s in merged["sources"].split(",") if s]
-        if not isinstance(merged.get("sources"), list):
-            merged["sources"] = ["trending", "tmdb_movies", "tmdb_tvs"]
+        merged["source_config"] = self._normalize_source_config(merged)
+        merged.pop("sources", None)
         try:
             merged["interval"] = max(3, min(30, int(merged.get("interval") or 8)))
         except (TypeError, ValueError):
@@ -453,32 +649,31 @@ class FullScreenPosterWall(_PluginBase):
                 random.shuffle(data)
             return {"success": True, "data": data, "cached": True}
 
-        chain = self._recommend_chain or RecommendChain()
+        source_config = self._source_config or self._default_source_config()
+        active_sources = [p for p, t in source_config.items() if t]
         items: List[Dict[str, Any]] = []
         # 按目标张数计算每源需要的页数（每页约 20 条）
-        n_sources = max(1, len(self._sources))
+        n_sources = max(1, len(active_sources))
         pages = max(1, -(-self._poster_count // (20 * n_sources)))  # 向上取整
-        loop = asyncio.new_event_loop()
-        try:
-            for page in range(1, pages + 1):
-                for source in self._sources:
-                    try:
-                        medias = loop.run_until_complete(
-                            self._fetch_source(chain, source, page=page)
-                        )
-                    except Exception:
+        for page in range(1, pages + 1):
+            for api_path in active_sources:
+                types = source_config.get(api_path) or []
+                try:
+                    dicts = self._fetch_source_dicts(api_path, page=page)
+                except Exception:
+                    continue
+                for d in dicts:
+                    if not self._match_types(d, types):
                         continue
-                    for m in medias or []:
-                        item = self._normalize(m, source)
-                        if item:
-                            items.append(item)
-        finally:
-            loop.close()
+                    item = self._normalize(d, api_path)
+                    if item:
+                        items.append(item)
 
         seen = set()
         unique: List[Dict[str, Any]] = []
         for it in items:
-            key = (it.get("source"), it.get("tmdb_id") or it.get("title"))
+            # 多源重叠时按 tmdb_id 去重（无 tmdb_id 退回 源+标题）
+            key = it.get("tmdb_id") or (it.get("source"), it.get("title"))
             if key in seen:
                 continue
             seen.add(key)
@@ -503,23 +698,13 @@ class FullScreenPosterWall(_PluginBase):
             random.shuffle(data)
         return {"success": True, "data": data, "cached": False, "count": len(data)}
 
-    async def _fetch_source(
-        self, chain: RecommendChain, source: str, page: int = 1
-    ) -> Optional[List[MediaInfo]]:
-        """根据 source 拉取对应类型的推荐（支持分页）。"""
-        if source == "trending":
-            return await chain.async_tmdb_trending(page=page)
-        if source == "tmdb_movies":
-            return await chain.async_tmdb_movies(page=page)
-        if source == "tmdb_tvs":
-            return await chain.async_tmdb_tvs(page=page)
-        return None
-
     @staticmethod
-    def _normalize(media: MediaInfo, source: str) -> Optional[Dict[str, Any]]:
-        """把 MediaInfo 转成前端友好的 dict。"""
+    def _normalize(data: Any, source: str) -> Optional[Dict[str, Any]]:
+        """把推荐条目（dict 或 MediaInfo）转成前端友好的 dict。"""
         try:
-            data = media.to_dict() if hasattr(media, "to_dict") else dict(media)
+            if hasattr(data, "to_dict"):
+                data = data.to_dict()
+            data = dict(data)
         except Exception:
             data = {}
         if not data:

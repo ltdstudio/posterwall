@@ -1,0 +1,15 @@
+
+.fspw-config-root[data-v-40f8748b] { width: 100%;
+}
+.gap-2[data-v-40f8748b] > * + * { margin-left: 8px;
+}
+.source-row[data-v-40f8748b] { min-height: 36px;
+}
+.source-enable[data-v-40f8748b] { flex: 0 0 auto; margin-right: 4px;
+}
+.source-name[data-v-40f8748b] { font-size: 0.875rem;
+}
+.source-nat[data-v-40f8748b] { font-size: 0.75rem; margin-left: 6px;
+}
+.type-check[data-v-40f8748b] { flex: 0 0 auto; margin-left: 8px;
+}
