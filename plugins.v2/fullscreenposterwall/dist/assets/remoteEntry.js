@@ -8,8 +8,8 @@ const currentImports = {};
       dynamicLoadingCss(["__federation_expose_Config-CzrE8sLN.css"], false, './Config');
       return __federation_import('./__federation_expose_Config-DwLNSYr8.js').then(module =>Object.keys(module).every(item => exportSet.has(item)) ? () => module.default : () => module)},
 "./Dashboard":()=>{
-      dynamicLoadingCss(["__federation_expose_Dashboard-CSQOOS81.css","DepthTunnel-Z5fWXU5w.css"], false, './Dashboard');
-      return __federation_import('./__federation_expose_Dashboard-DW3ta1lG.js').then(module =>Object.keys(module).every(item => exportSet.has(item)) ? () => module.default : () => module)},};
+      dynamicLoadingCss(["__federation_expose_Dashboard-CXWTKYsH.css","DepthTunnel-Z5fWXU5w.css"], false, './Dashboard');
+      return __federation_import('./__federation_expose_Dashboard-Doh6gfFP.js').then(module =>Object.keys(module).every(item => exportSet.has(item)) ? () => module.default : () => module)},};
       const seen = {};
       const dynamicLoadingCss = (cssFilePaths, dontAppendStylesToHead, exposeItemName) => {
         const metaUrl = import.meta.url;

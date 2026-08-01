@@ -226,6 +226,12 @@ function onKey(e) {
 }
 
 let stageObserver = null
+// MoviePilot 仪表板格子高度由框架 ResizeObserver 驱动，但联邦组件是异步注入的，
+// 存在竞态：格子可能停留在骨架高度（只见标题、内容不占位）。
+// 挂载与数据就绪后派发 window resize，强制 grid-stack 重新测量本格。
+function nudgeGridResize() {
+  nextTick(() => requestAnimationFrame(() => window.dispatchEvent(new Event('resize'))))
+}
 onMounted(async () => {
   await loadConfig()
   await loadData(true)
@@ -237,6 +243,9 @@ onMounted(async () => {
       stageObserver.observe(stageRef.value)
     }
   })
+  nudgeGridResize()
+  setTimeout(nudgeGridResize, 800)
+  setTimeout(nudgeGridResize, 2500)
   window.addEventListener('resize', updateStageZoom)
   fsChangeHandler = onFsChange
   document.addEventListener('fullscreenchange', fsChangeHandler)
