@@ -274,7 +274,9 @@ async function loadSources() {
   sourcesError.value = ''
   try {
     const raw = await api.get(`${API_BASE}/sources`)
-    const payload = raw?.data ?? raw
+    // 主框架 axios 拦截器已解包：raw 通常就是后端 body {success, data}；
+    // 少数版本可能仍套一层 axios response（raw.data 才是 body），两种都兼容。
+    const payload = (raw && typeof raw === 'object' && 'success' in raw) ? raw : (raw?.data ?? raw)
     if (payload?.success) {
       sourceList.value = payload.data?.sources || []
       // 后端返回的当前选择优先于 initialConfig（权威状态）
