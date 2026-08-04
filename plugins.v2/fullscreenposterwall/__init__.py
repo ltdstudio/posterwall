@@ -8,11 +8,30 @@ from __future__ import annotations
 
 import socket
 from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import quote
 
 from app.chain.recommend import RecommendChain
 from app.plugins import _PluginBase
 from app.schemas.types import MediaType
-from fastapi import Request
+from fastapi import Request, Response
+
+
+def _proxy_douban_url(url: Optional[str]) -> Optional[str]:
+    """豆瓣图床 URL → 本插件免登录代理（防盗链）；顺带 m_ratio→l_ratio 升清晰度。
+
+    非豆瓣 URL 原样返回。代理路径用相对地址，lan-wall 在任何主机/端口都能用。
+    """
+    if not url or not isinstance(url, str):
+        return url
+    if "doubanio.com" not in url and "douban.com" not in url:
+        return url
+    upgraded = url.replace("s_ratio_poster", "l_ratio_poster").replace(
+        "m_ratio_poster", "l_ratio_poster"
+    )
+    return (
+        "/api/v1/plugin/FullScreenPosterWall/img?url="
+        + quote(upgraded, safe="")
+    )
 
 
 def _detect_lan_info() -> Dict[str, Any]:
@@ -86,7 +105,7 @@ class FullScreenPosterWall(_PluginBase):
     plugin_name = "全屏海报墙"
     plugin_desc = "这是一个全屏海报墙插件，让所有终端可以播放精美的电影海报。抓取 MoviePilot 推荐媒体（流行趋势/TMDB热门电影/TMDB热门电视剧）的海报图片，以照片/拼贴/纵深穿梭/滑动面板/浮动/怀旧冲印/光舞等多种动效全屏展示，支持局域网海报墙页面。"
     plugin_icon = "https://raw.githubusercontent.com/ltdstudio/posterwall/main/icons/fullscreenposterwall.png"
-    plugin_version = "1.15.2"
+    plugin_version = "1.15.3"
     plugin_label = "媒体展示"
     plugin_author = "ltdstudio"
     plugin_config_prefix = "fullscreenposterwall_"
@@ -478,6 +497,14 @@ class FullScreenPosterWall(_PluginBase):
                 "auth": "bear",
                 "allow_anonymous": True,
             },
+            {
+                "path": "/img",
+                "endpoint": self.api_proxy_image,
+                "methods": ["GET"],
+                "summary": "豆瓣等防盗链图源的免登录代理（白名单域名）",
+                "auth": "bear",
+                "allow_anonymous": True,
+            },
         ]
 
     def api_lan_info(self, request: Request = None) -> Dict[str, Any]:
@@ -534,6 +561,43 @@ class FullScreenPosterWall(_PluginBase):
         # 复用 recommend 的缓存逻辑
         rec = self.api_get_recommend()
         return {"config": cfg, "items": rec.get("data", [])}
+
+    def api_proxy_image(self, url: str = "") -> Any:
+        """免登录图片代理：只放行白名单域名（豆瓣图床防盗链）。
+
+        豆瓣 img*.doubanio.com 会按 Referer 拦截浏览器直链（红叉）。
+        拉图直接复用 MoviePilot 自己的 ImageHelper（doubanio 自动带
+        Referer + 直连不走代理 + 磁盘缓存），与系统刮削/探索页同一条链路。
+        """
+        url = (url or "").strip()
+        if not url.startswith("https://"):
+            return Response(status_code=400, content="invalid url")
+        try:
+            host = url.split("/", 3)[2].lower()
+        except Exception:
+            return Response(status_code=400, content="invalid url")
+        allowed = ("doubanio.com", "douban.com")
+        if not any(host == d or host.endswith("." + d) for d in allowed):
+            return Response(status_code=403, content="host not allowed")
+        try:
+            from app.helper.image import ImageHelper
+
+            result = ImageHelper().fetch_image_with_mime_type(
+                url=url, use_cache=True
+            )
+            if not result:
+                return Response(status_code=502, content="upstream error")
+            content, ctype = result
+            return Response(
+                content=content,
+                media_type=ctype,
+                headers={
+                    "Cache-Control": "public, max-age=86400, immutable",
+                    "Content-Length": str(len(content)),
+                },
+            )
+        except Exception:
+            return Response(status_code=502, content="fetch failed")
 
     def api_lan_wall(self) -> Any:
         """返回独立全屏播放 HTML（无认证）。HTML 文件随 plugin 一起发布到 dist/lan-wall.html。
@@ -716,8 +780,8 @@ class FullScreenPosterWall(_PluginBase):
             "type": data.get("type") or "",
             "overview": data.get("overview") or "",
             "vote_average": data.get("vote_average") or 0,
-            "poster_path": data.get("poster_path"),
-            "backdrop_path": data.get("backdrop_path"),
+            "poster_path": _proxy_douban_url(data.get("poster_path")),
+            "backdrop_path": _proxy_douban_url(data.get("backdrop_path")),
             "logo_path": data.get("logo_path"),
             "thumb_path": data.get("thumb_path"),
             "fanart_poster_path": data.get("fanart_poster_path"),

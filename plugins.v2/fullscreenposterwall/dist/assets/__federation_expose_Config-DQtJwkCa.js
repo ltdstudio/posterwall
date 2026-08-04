@@ -268,24 +268,30 @@ return (_ctx, _cache) => {
                 _createElementVNode("span", _hoisted_5, _toDisplayString(natLabel(s.nat)), 1)
               ]),
               _createVNode(_component_v_spacer),
-              _createVNode(_component_v_checkbox, {
-                label: "电影",
-                "model-value": hasType(s.api_path, 'movie'),
-                disabled: !isSourceOn(s.api_path) || s.nat === 'tv',
-                "hide-details": "",
-                density: "compact",
-                class: "type-check",
-                "onUpdate:modelValue": v => toggleType(s.api_path, 'movie', v)
-              }, null, 8, ["model-value", "disabled", "onUpdate:modelValue"]),
-              _createVNode(_component_v_checkbox, {
-                label: "电视剧",
-                "model-value": hasType(s.api_path, 'tv'),
-                disabled: !isSourceOn(s.api_path) || s.nat === 'movie',
-                "hide-details": "",
-                density: "compact",
-                class: "type-check",
-                "onUpdate:modelValue": v => toggleType(s.api_path, 'tv', v)
-              }, null, 8, ["model-value", "disabled", "onUpdate:modelValue"])
+              (s.nat !== 'tv')
+                ? (_openBlock(), _createBlock(_component_v_checkbox, {
+                    key: 0,
+                    label: "电影",
+                    "model-value": hasType(s.api_path, 'movie'),
+                    disabled: !isSourceOn(s.api_path),
+                    "hide-details": "",
+                    density: "compact",
+                    class: "type-check",
+                    "onUpdate:modelValue": v => toggleType(s.api_path, 'movie', v)
+                  }, null, 8, ["model-value", "disabled", "onUpdate:modelValue"]))
+                : _createCommentVNode("", true),
+              (s.nat !== 'movie')
+                ? (_openBlock(), _createBlock(_component_v_checkbox, {
+                    key: 1,
+                    label: "电视剧",
+                    "model-value": hasType(s.api_path, 'tv'),
+                    disabled: !isSourceOn(s.api_path),
+                    "hide-details": "",
+                    density: "compact",
+                    class: "type-check",
+                    "onUpdate:modelValue": v => toggleType(s.api_path, 'tv', v)
+                  }, null, 8, ["model-value", "disabled", "onUpdate:modelValue"]))
+                : _createCommentVNode("", true)
             ]))
           }), 128)),
           (!sourcesLoading.value && !sourceList.value.length && !sourcesError.value)
@@ -418,6 +424,6 @@ return (_ctx, _cache) => {
 }
 
 };
-const Config = /*#__PURE__*/_export_sfc(_sfc_main, [['__scopeId',"data-v-26f73ef7"]]);
+const Config = /*#__PURE__*/_export_sfc(_sfc_main, [['__scopeId',"data-v-e5ccba41"]]);
 
 export { Config as default };
