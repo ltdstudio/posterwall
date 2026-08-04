@@ -51,14 +51,14 @@
           <v-checkbox
             label="电影"
             :model-value="hasType(s.api_path, 'movie')"
-            :disabled="!isSourceOn(s.api_path)"
+            :disabled="!isSourceOn(s.api_path) || s.nat === 'tv'"
             hide-details density="compact" class="type-check"
             @update:model-value="v => toggleType(s.api_path, 'movie', v)"
           />
           <v-checkbox
             label="电视剧"
             :model-value="hasType(s.api_path, 'tv')"
-            :disabled="!isSourceOn(s.api_path)"
+            :disabled="!isSourceOn(s.api_path) || s.nat === 'movie'"
             hide-details density="compact" class="type-check"
             @update:model-value="v => toggleType(s.api_path, 'tv', v)"
           />

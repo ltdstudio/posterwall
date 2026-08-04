@@ -271,7 +271,7 @@ return (_ctx, _cache) => {
               _createVNode(_component_v_checkbox, {
                 label: "电影",
                 "model-value": hasType(s.api_path, 'movie'),
-                disabled: !isSourceOn(s.api_path),
+                disabled: !isSourceOn(s.api_path) || s.nat === 'tv',
                 "hide-details": "",
                 density: "compact",
                 class: "type-check",
@@ -280,7 +280,7 @@ return (_ctx, _cache) => {
               _createVNode(_component_v_checkbox, {
                 label: "电视剧",
                 "model-value": hasType(s.api_path, 'tv'),
-                disabled: !isSourceOn(s.api_path),
+                disabled: !isSourceOn(s.api_path) || s.nat === 'movie',
                 "hide-details": "",
                 density: "compact",
                 class: "type-check",
@@ -418,6 +418,6 @@ return (_ctx, _cache) => {
 }
 
 };
-const Config = /*#__PURE__*/_export_sfc(_sfc_main, [['__scopeId',"data-v-fd8a7465"]]);
+const Config = /*#__PURE__*/_export_sfc(_sfc_main, [['__scopeId',"data-v-26f73ef7"]]);
 
 export { Config as default };
