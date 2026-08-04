@@ -439,6 +439,7 @@
     const base = domain || 'https://image.tmdb.org/t/p/original';
     const urls = paths.filter(Boolean).map(p => {
       if (/^https?:/.test(p)) return p;
+      if (p.startsWith('/api/')) return p; // 本插件代理等站内路径，不拼 TMDB 域名
       if (p.startsWith('/')) return base + p;
       return base + '/' + p;
     });
@@ -488,13 +489,14 @@
   function noteNativeFail(it, url, imageType, domain) {
     if (!it || imageType !== 'logo' || !url) return;
     const base = domain || 'https://image.tmdb.org/t/p/original';
-    const natives = [it.thumb_path, it.fanart_poster_path].filter(Boolean).map(p => (/^https?:/.test(p) ? p : p.startsWith('/') ? base + p : base + '/' + p));
+    const natives = [it.thumb_path, it.fanart_poster_path].filter(Boolean).map(p => (/^https?:/.test(p) ? p : p.startsWith('/api/') ? p : p.startsWith('/') ? base + p : base + '/' + p));
     it.__native_failed = natives.indexOf(url) === -1;
   }
   function logoUrl(item, domain) {
     if (!item || !item.logo_path) return '';
     const path = item.logo_path;
     if (/^https?:/.test(path)) return path;
+    if (path.startsWith('/api/')) return path;
     if (path.startsWith('/')) return (domain || 'https://image.tmdb.org/t/p/original') + path;
     return (domain || 'https://image.tmdb.org/t/p/original') + '/' + path;
   }

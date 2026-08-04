@@ -16,14 +16,16 @@ from app.schemas.types import MediaType
 from fastapi import Request, Response
 
 
-def _proxy_douban_url(url: Optional[str]) -> Optional[str]:
-    """豆瓣图床 URL → 本插件免登录代理（防盗链）；顺带 m_ratio→l_ratio 升清晰度。
+def _proxy_image_url(url: Optional[str]) -> Optional[str]:
+    """防盗链/需 UA 的图床 URL → 本插件免登录代理。
 
-    非豆瓣 URL 原样返回。代理路径用相对地址，lan-wall 在任何主机/端口都能用。
+    覆盖：豆瓣 doubanio（Referer 防盗链，顺带 m_ratio→l_ratio 升清晰度）、
+    AniList s4.anilist.co（无 UA 直链 403）。其余 URL 原样返回。
+    代理路径用相对地址，lan-wall 在任何主机/端口都能用。
     """
     if not url or not isinstance(url, str):
         return url
-    if "doubanio.com" not in url and "douban.com" not in url:
+    if not any(h in url for h in ("doubanio.com", "douban.com", "anilist.co")):
         return url
     upgraded = url.replace("s_ratio_poster", "l_ratio_poster").replace(
         "m_ratio_poster", "l_ratio_poster"
@@ -105,36 +107,39 @@ class FullScreenPosterWall(_PluginBase):
     plugin_name = "全屏海报墙"
     plugin_desc = "这是一个全屏海报墙插件，让所有终端可以播放精美的电影海报。抓取 MoviePilot 推荐媒体（流行趋势/TMDB热门电影/TMDB热门电视剧）的海报图片，以照片/拼贴/纵深穿梭/滑动面板/浮动/怀旧冲印/光舞等多种动效全屏展示，支持局域网海报墙页面。"
     plugin_icon = "https://raw.githubusercontent.com/ltdstudio/posterwall/main/icons/fullscreenposterwall.png"
-    plugin_version = "1.15.3"
+    plugin_version = "1.15.4"
     plugin_label = "媒体展示"
     plugin_author = "ltdstudio"
     plugin_config_prefix = "fullscreenposterwall_"
     plugin_order = 50
     auth_level = 1
 
-    # 内置推荐数据源目录：(api_path, 名称, RecommendChain 方法名, 天然类型 movie/tv/mixed)
-    # 与 MoviePilot 工作流「获取媒体数据」动作的内置清单一致；
+    # 内置推荐数据源目录：(api_path, 名称, Chain, 方法名, 天然类型 movie/tv/mixed)
+    # 与 MoviePilot 探索页的媒体源对齐（RecommendChain 13 源 + AniListChain 2 源）；
     # 运行时按 hasattr 逐个校验，系统升级增减方法时自动跟随。
-    _BUILTIN_SOURCES: Tuple[Tuple[str, str, str, str], ...] = (
-        ("recommend/tmdb_trending", "流行趋势", "tmdb_trending", "mixed"),
-        ("recommend/douban_showing", "正在热映", "douban_movie_showing", "movie"),
-        ("recommend/bangumi_calendar", "Bangumi每日放送", "bangumi_calendar", "tv"),
-        ("recommend/tmdb_movies", "TMDB热门电影", "tmdb_movies", "movie"),
-        ("recommend/tmdb_tvs", "TMDB热门电视剧", "tmdb_tvs", "tv"),
-        ("recommend/douban_movie_hot", "豆瓣热门电影", "douban_movie_hot", "movie"),
-        ("recommend/douban_tv_hot", "豆瓣热门电视剧", "douban_tv_hot", "tv"),
-        ("recommend/douban_tv_animation", "豆瓣热门动漫", "douban_tv_animation", "tv"),
-        ("recommend/douban_movies", "豆瓣最新电影", "douban_movies", "movie"),
-        ("recommend/douban_tvs", "豆瓣最新电视剧", "douban_tvs", "tv"),
-        ("recommend/douban_movie_top250", "豆瓣电影TOP250", "douban_movie_top250", "movie"),
-        ("recommend/douban_tv_weekly_chinese", "豆瓣国产剧集榜", "douban_tv_weekly_chinese", "tv"),
-        ("recommend/douban_tv_weekly_global", "豆瓣全球剧集榜", "douban_tv_weekly_global", "tv"),
+    _BUILTIN_SOURCES: Tuple[Tuple[str, str, str, str, str], ...] = (
+        ("recommend/tmdb_trending", "流行趋势", "recommend", "tmdb_trending", "mixed"),
+        ("recommend/douban_showing", "正在热映", "recommend", "douban_movie_showing", "movie"),
+        ("recommend/bangumi_calendar", "Bangumi每日放送", "recommend", "bangumi_calendar", "tv"),
+        ("recommend/tmdb_movies", "TMDB热门电影", "recommend", "tmdb_movies", "movie"),
+        ("recommend/tmdb_tvs", "TMDB热门电视剧", "recommend", "tmdb_tvs", "tv"),
+        ("recommend/douban_movie_hot", "豆瓣热门电影", "recommend", "douban_movie_hot", "movie"),
+        ("recommend/douban_tv_hot", "豆瓣热门电视剧", "recommend", "douban_tv_hot", "tv"),
+        ("recommend/douban_tv_animation", "豆瓣热门动漫", "recommend", "douban_tv_animation", "tv"),
+        ("recommend/douban_movies", "豆瓣最新电影", "recommend", "douban_movies", "movie"),
+        ("recommend/douban_tvs", "豆瓣最新电视剧", "recommend", "douban_tvs", "tv"),
+        ("recommend/douban_movie_top250", "豆瓣电影TOP250", "recommend", "douban_movie_top250", "movie"),
+        ("recommend/douban_tv_weekly_chinese", "豆瓣国产剧集榜", "recommend", "douban_tv_weekly_chinese", "tv"),
+        ("recommend/douban_tv_weekly_global", "豆瓣全球剧集榜", "recommend", "douban_tv_weekly_global", "tv"),
+        ("anilist/trending", "AniList趋势", "anilist", "trending", "tv"),
+        ("anilist/popular_this_season", "AniList本季人气", "anilist", "popular_this_season", "tv"),
     )
 
     # ─── 运行时状态 ─────────────────────────────────────────
     _enabled: bool = False
     # 动态推荐数据源：{api_path: ["movie"/"tv", ...]}，值为空列表 = 停用该源
     _source_config: Dict[str, List[str]] = {}
+    _anilist_chain: Any = None
     _effect: str = "photos"
     _interval: int = 8
     _image_type: str = "backdrop"
@@ -240,7 +245,7 @@ class FullScreenPosterWall(_PluginBase):
             result = {}
             for s in legacy:
                 api_path = cls._LEGACY_SOURCE_MAP.get(str(s)) or (
-                    str(s) if str(s).startswith(("recommend/", "plugin/")) else None
+                    str(s) if str(s).startswith(("recommend/", "plugin/", "anilist/")) else None
                 )
                 if api_path:
                     result[api_path] = ["movie", "tv"]
@@ -258,9 +263,9 @@ class FullScreenPosterWall(_PluginBase):
         其他插件（如 IMDb源）注册的源自动出现，卸载后自动消失。
         """
         sources: List[Dict[str, Any]] = []
-        chain = self._recommend_chain or RecommendChain()
-        for api_path, name, method, nat in self._BUILTIN_SOURCES:
-            if hasattr(chain, method):
+        for api_path, name, chain_key, method, nat in self._BUILTIN_SOURCES:
+            chain = self._chain_for(chain_key)
+            if chain is not None and hasattr(chain, method):
                 sources.append({
                     "api_path": api_path,
                     "name": name,
@@ -320,22 +325,45 @@ class FullScreenPosterWall(_PluginBase):
         except Exception as e:
             return {"success": False, "message": str(e)}
 
+    def _chain_for(self, chain_key: str) -> Any:
+        """按目录 key 取对应 Chain 实例（anilist 懒加载，导入失败返回 None）。"""
+        if chain_key == "anilist":
+            if self._anilist_chain is None:
+                try:
+                    from app.chain.anilist import AniListChain
+
+                    self._anilist_chain = AniListChain()
+                except Exception:
+                    return None
+            return self._anilist_chain
+        return self._recommend_chain or RecommendChain()
+
     def _fetch_source_dicts(
         self, api_path: str, page: int = 1
     ) -> List[Dict[str, Any]]:
         """按 api_path 拉取一页推荐数据（dict 列表）。
 
-        内置源直接调 RecommendChain 同步方法；第三方插件源走内部 API
+        内置源直接调对应 Chain 同步方法；第三方插件源走内部 API
         （与 MoviePilot 工作流「获取媒体数据」动作同一套做法）。
         """
-        for bp, _name, method, _nat in self._BUILTIN_SOURCES:
+        for bp, _name, chain_key, method, _nat in self._BUILTIN_SOURCES:
             if bp == api_path:
-                chain = self._recommend_chain or RecommendChain()
-                func = getattr(chain, method, None)
+                chain = self._chain_for(chain_key)
+                func = getattr(chain, method, None) if chain else None
                 if not func:
                     return []
                 result = func(page=page) or []
-                return [dict(x) for x in result if isinstance(x, dict)]
+                out: List[Dict[str, Any]] = []
+                for x in result:
+                    if isinstance(x, dict):
+                        out.append(dict(x))
+                    elif hasattr(x, "to_dict"):
+                        # AniListChain 返回 MediaInfo 对象
+                        try:
+                            out.append(dict(x.to_dict()))
+                        except Exception:
+                            pass
+                return out
         # 第三方插件源：内部 API 调用
         try:
             from app.core.config import settings
@@ -576,7 +604,7 @@ class FullScreenPosterWall(_PluginBase):
             host = url.split("/", 3)[2].lower()
         except Exception:
             return Response(status_code=400, content="invalid url")
-        allowed = ("doubanio.com", "douban.com")
+        allowed = ("doubanio.com", "douban.com", "anilist.co")
         if not any(host == d or host.endswith("." + d) for d in allowed):
             return Response(status_code=403, content="host not allowed")
         try:
@@ -780,8 +808,8 @@ class FullScreenPosterWall(_PluginBase):
             "type": data.get("type") or "",
             "overview": data.get("overview") or "",
             "vote_average": data.get("vote_average") or 0,
-            "poster_path": _proxy_douban_url(data.get("poster_path")),
-            "backdrop_path": _proxy_douban_url(data.get("backdrop_path")),
+            "poster_path": _proxy_image_url(data.get("poster_path")),
+            "backdrop_path": _proxy_image_url(data.get("backdrop_path")),
             "logo_path": data.get("logo_path"),
             "thumb_path": data.get("thumb_path"),
             "fanart_poster_path": data.get("fanart_poster_path"),

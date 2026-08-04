@@ -51,7 +51,8 @@ export function pickImageCandidates(item: PosterItem, type: 'backdrop' | 'poster
   const base = domain || 'https://image.tmdb.org/t/p/original';
   const urls = paths
     .filter((p): p is string => !!p)
-    .map(p => (/^https?:\/\//.test(p) ? p : p.startsWith('/') ? base + p : base + '/' + p));
+    // '/api/...' 开头 = 本插件代理等站内路径，原样使用（不能拼 TMDB 域名）
+    .map(p => (/^https?:\/\//.test(p) ? p : p.startsWith('/api/') ? p : p.startsWith('/') ? base + p : base + '/' + p));
   return [...new Set(urls)];
 }
 
@@ -114,7 +115,7 @@ export function noteLoadedMainUrl(item: PosterItem, type: 'backdrop' | 'poster' 
   const base = domain || 'https://image.tmdb.org/t/p/original';
   const natives = [item.thumb_path, item.fanart_poster_path]
     .filter((p): p is string => !!p)
-    .map(p => (/^https?:\/\//.test(p) ? p : p.startsWith('/') ? base + p : base + '/' + p));
+    .map(p => (/^https?:\/\//.test(p) ? p : p.startsWith('/api/') ? p : p.startsWith('/') ? base + p : base + '/' + p));
   item.__native_failed = !natives.includes(url);
 }
 
@@ -123,6 +124,7 @@ export function pickLogoUrl(item: PosterItem, domain: string): string {
   const path = item.logo_path;
   if (!path) return '';
   if (/^https?:\/\//.test(path)) return path;
+  if (path.startsWith('/api/')) return path;
   if (path.startsWith('/')) return domain + path;
   return domain + '/' + path;
 }
