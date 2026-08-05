@@ -415,7 +415,7 @@
 </head>
 <body>
 <div id="app">
-  <div class="placeholder" id="placeholder">正在加载海报...</div>
+  <div class="placeholder" id="placeholder">正在拉取图片与 Logo…</div>
 </div>
 
 <script>
@@ -504,12 +504,20 @@
   function shuffle(a) { const x = a.slice(); for (let i = x.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [x[i], x[j]] = [x[j], x[i]]; } return x; }
   function escapeHtml(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
 
-  function setTopBar(cfg, items) {
+  function setTopBar(cfg, items, meta) {
     const tb = document.createElement('div');
     tb.className = 'topbar';
     const effectName = ({photos:'照片',floating:'浮动',vintage:'怀旧冲印',lightdance:'光舞',shiftingtiles:'流动拼贴',slidingpanels:'滑动面板',ring3d:'环形画廊',depthtunnel:'纵深穿梭'})[cfg.effect] || cfg.effect;
+    // 拉取状态：图片/Logo 就绪数（logo 模式下显示 Logo 进度）
+    const m = meta || {};
+    const imgPill = m.with_image != null
+      ? '<div class="pill">图片 ' + m.with_image + '/' + m.total + ' 就绪</div>'
+      : '<div class="pill">' + items.length + ' 张</div>';
+    const logoPill = (cfg.image_type === 'logo' && m.with_logo != null && m.with_logo > 0)
+      ? '<div class="pill">Logo ' + m.with_logo + '/' + m.total + (m.logos_done ? ' 就绪' : ' 拉取中') + '</div>'
+      : '';
     tb.innerHTML = '<div class="pill"><span class="dot"></span>' + effectName + ' · 每 ' + cfg.interval + ' 秒</div>' +
-                   '<div class="pill">' + items.length + ' 张</div>' +
+                   imgPill + logoPill +
                    (cfg.shuffle ? '<div class="pill">随机乱序</div>' : '') +
                    (cfg.hide_text ? '<div class="pill">去文字</div>' : '');
     document.body.appendChild(tb);
@@ -522,7 +530,7 @@
     const cfg = data.config || {};
     let items = data.items || [];
     if (cfg.shuffle) items = shuffle(items);
-    return { cfg, items };
+    return { cfg, items, meta: data.meta || null };
   }
 
   function clearApp() { const app = document.getElementById('app'); app.innerHTML = ''; return app; }
@@ -1631,12 +1639,12 @@
 
   function renderWaiting() {
     const app = document.getElementById('app');
-    app.innerHTML = '<div class="placeholder waiting">请等候拉取图片数据…</div>';
+    app.innerHTML = '<div class="placeholder waiting">请等候拉取图片/Logo 数据…</div>';
   }
 
   async function boot() {
     try {
-      const { cfg, items } = await load();
+      const { cfg, items, meta } = await load();
       if (!cfg.enabled) { renderError('插件未启用。请在 MoviePilot 启用"全屏海报墙"插件。'); return; }
       if (!items.length) {
         // 数据未就绪：红字闪烁提示，每 5 秒重试
@@ -1644,7 +1652,7 @@
         setTimeout(boot, 5000);
         return;
       }
-      setTopBar(cfg, items);
+      setTopBar(cfg, items, meta);
       renderEffect(cfg, items);
       setupFullscreenOnGesture();
     } catch (e) {

@@ -7,8 +7,12 @@
         <div>
           <h2 class="ma-0">全屏海报墙</h2>
           <div class="fspw-meta">
-            <span v-if="!items.length" class="fspw-waiting">请等候拉取图片…</span>
-            <template v-else>{{ items.length }} 张海报已就绪 ·</template>
+            <span v-if="!items.length" class="fspw-waiting">请等候拉取图片/Logo…</span>
+            <template v-else>
+              {{ items.length }} 张已就绪
+              <template v-if="config.image_type === 'logo' && logoReady > 0"> · Logo {{ logoReady }}/{{ items.length }} 就绪{{ logoReady >= items.length ? ' · 完成' : '' }}</template>
+              ·
+            </template>
             <strong>{{ effectName }}</strong> ·
             {{ config.interval }} 秒切换
           </div>
@@ -232,16 +236,31 @@ const effectName = computed(() => {
   const e = effects.find(x => x.key === config.value.effect)
   return e ? e.name : '照片'
 })
+// Logo 拉取就绪数（logo 模式下显示在标题行）
+const logoReady = computed(() => items.value.filter(i => i.logo_path).length)
 const sourceChips = computed(() => {
+  // 动态数据源：{api_path: [types]} → 短名 chips（内置源映射，第三方源取路径末段）
   const map = {
-    trending: '流行趋势',
-    tmdb_movies: 'TMDB热门电影',
-    tmdb_tvs: 'TMDB热门电视剧',
+    'recommend/tmdb_trending': '流行趋势',
+    'recommend/douban_showing': '正在热映',
+    'recommend/bangumi_calendar': 'Bangumi放送',
+    'recommend/tmdb_movies': 'TMDB电影',
+    'recommend/tmdb_tvs': 'TMDB电视剧',
+    'recommend/douban_movie_hot': '豆瓣热影',
+    'recommend/douban_tv_hot': '豆瓣热剧',
+    'recommend/douban_tv_animation': '豆瓣动漫',
+    'recommend/douban_movies': '豆瓣新影',
+    'recommend/douban_tvs': '豆瓣新剧',
+    'recommend/douban_movie_top250': '豆瓣TOP250',
+    'recommend/douban_tv_weekly_chinese': '国产剧榜',
+    'recommend/douban_tv_weekly_global': '全球剧榜',
+    'anilist/trending': 'AniList趋势',
+    'anilist/popular_this_season': 'AniList本季',
   }
-  const list = config.value.sources || []
-  return list
-    .filter(s => map[s])
-    .map(s => ({ key: s, name: map[s] }))
+  const cfg = config.value.source_config || {}
+  return Object.keys(cfg)
+    .filter(k => (cfg[k] || []).length)
+    .map(k => ({ key: k, name: map[k] || k.split('/').pop() }))
 })
 const imageTypeName = computed(() => {
   const m = { poster: '海报 (poster)', backdrop: '背景大图 (backdrop)', both: '海报 + 背景' }
