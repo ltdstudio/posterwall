@@ -37,6 +37,8 @@ interface Moving {
   vx: number; vy: number;
   size: number;       // 缩放后的宽
   rot: number;
+  baseRot: number;    // 基础倾角（小角度，有界摆动）
+  phase: number;      // 摆动相位
   z: number;          // 图层 0-1
   fade: number;       // 0..1 不透明度
 }
@@ -77,7 +79,9 @@ function spawn(): Moving | null {
     vx: Math.cos(angle) * speed,
     vy: Math.sin(angle) * speed,
     size,
-    rot: (Math.random() - 0.5) * 6,
+    rot: 0,
+    baseRot: (Math.random() - 0.5) * 3,   // ±1.5°
+    phase: Math.random() * Math.PI * 2,
     z: Math.random(),
     fade: 0,
   };
@@ -131,7 +135,8 @@ function step(now: number) {
     if (m.y < -m.size * 0.3) { m.y = -m.size * 0.3; m.vy = Math.abs(m.vy); }
     if (m.y > h - m.size * 0.5) { m.y = h - m.size * 0.5; m.vy = -Math.abs(m.vy); }
     m.fade = Math.min(1, m.fade + 0.02);
-    m.rot += Math.sin((now / 1000 + m.x) * 0.0003) * 0.02;
+    // 有界摆动（不累积）：最大倾角 ≈ baseRot ± 1.2°，长时间运行不越发越斜
+    m.rot = m.baseRot + Math.sin(now / 1000 * 0.5 + m.phase) * 1.2;
   }
   raf = requestAnimationFrame(step);
 }

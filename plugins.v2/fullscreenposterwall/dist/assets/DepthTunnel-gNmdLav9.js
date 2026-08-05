@@ -256,7 +256,10 @@ const _sfc_main$6 = /* @__PURE__ */ _defineComponent$6({
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         size,
-        rot: (Math.random() - 0.5) * 6,
+        rot: 0,
+        baseRot: (Math.random() - 0.5) * 3,
+        // ±1.5°
+        phase: Math.random() * Math.PI * 2,
         z: Math.random(),
         fade: 0
       };
@@ -316,7 +319,7 @@ const _sfc_main$6 = /* @__PURE__ */ _defineComponent$6({
           m.vy = -Math.abs(m.vy);
         }
         m.fade = Math.min(1, m.fade + 0.02);
-        m.rot += Math.sin((now / 1e3 + m.x) * 3e-4) * 0.02;
+        m.rot = m.baseRot + Math.sin(now / 1e3 * 0.5 + m.phase) * 1.2;
       }
       raf = requestAnimationFrame(step);
     }
@@ -358,7 +361,7 @@ const _sfc_main$6 = /* @__PURE__ */ _defineComponent$6({
   }
 });
 
-const Floating = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["__scopeId", "data-v-b43f3d57"]]);
+const Floating = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["__scopeId", "data-v-e0e5b489"]]);
 
 const {defineComponent:_defineComponent$5} = await importShared('vue');
 
