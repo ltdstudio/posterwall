@@ -174,6 +174,17 @@
     inset: auto; margin: 0; left: 50%; bottom: 8%; transform: translateX(-50%);
   }
 
+  /* 未全屏时的右上角浮动全屏按钮 */
+  .fs-fab {
+    position: fixed; top: 14px; right: 14px; z-index: 998;
+    background: rgba(20,20,24,.6); color: #fff;
+    border: 1px solid rgba(255,255,255,.25); border-radius: 999px;
+    padding: 8px 16px; font-size: 14px; cursor: pointer;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    transition: background .2s;
+  }
+  .fs-fab:hover { background: rgba(40,40,48,.85); }
+
   /* 环形画廊：3D 圆柱环 + 步进旋转聚焦 */
   .effect-ring3d .rg-root { position: absolute; inset: 0; overflow: hidden; background: radial-gradient(ellipse at 50% 30%, #101318 0%, #000 70%); }
   /* 极光光斑：两团缓慢漂移的柔光 */
@@ -436,6 +447,10 @@
     if (imageType === 'poster') paths = [item.poster_path, item.backdrop_path];
     else if (imageType === 'logo') paths = [item.thumb_path, item.fanart_poster_path, item.backdrop_path, item.poster_path];
     else paths = [item.backdrop_path, item.poster_path];
+    // 竖屏优化：竖屏设备 poster（2:3 竖图）优先，横屏行为完全不变
+    if (imageType !== 'poster' && window.innerWidth < window.innerHeight) {
+      paths = [item.poster_path].concat(paths.filter(p => p && p !== item.poster_path));
+    }
     const base = domain || 'https://image.tmdb.org/t/p/original';
     const urls = paths.filter(Boolean).map(p => {
       if (/^https?:/.test(p)) return p;
@@ -1665,6 +1680,7 @@
 // 去掉倒数遮罩（手机/电视盒子上会卡住）：直接开播。
 // 浏览器要求用户手势才能全屏——加载后先静默试一次（部分电视浏览器允许），
 // 之后点击/按键监听常驻，第一次交互即进全屏，成功后自动移除监听。
+// 未全屏时右上角显示一个浮动「全屏」按钮（进全屏后自动隐藏）。
 function setupFullscreenOnGesture() {
   function tryFS() {
     if (document.fullscreenElement) {
@@ -1677,6 +1693,17 @@ function setupFullscreenOnGesture() {
   tryFS(); // 无手势时静默失败，不影响播放
   document.addEventListener('click', tryFS, true);
   document.addEventListener('keydown', tryFS, true);
+
+  const btn = document.createElement('button');
+  btn.className = 'fs-fab';
+  btn.textContent = '⛶ 全屏';
+  btn.addEventListener('click', e => { e.stopPropagation(); tryFS(); });
+  document.body.appendChild(btn);
+  function syncFab() {
+    btn.style.display = document.fullscreenElement ? 'none' : '';
+  }
+  document.addEventListener('fullscreenchange', syncFab);
+  syncFab();
 }
 </script>
 </body>

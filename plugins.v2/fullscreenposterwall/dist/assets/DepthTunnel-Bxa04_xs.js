@@ -6,7 +6,10 @@ function pickImageUrl(item, type, domain) {
 }
 function pickImageCandidates(item, type, domain) {
   if (!item) return [];
-  const paths = type === "poster" ? [item.poster_path, item.backdrop_path] : type === "logo" ? [item.thumb_path, item.fanart_poster_path, item.backdrop_path, item.poster_path] : [item.backdrop_path, item.poster_path];
+  let paths = type === "poster" ? [item.poster_path, item.backdrop_path] : type === "logo" ? [item.thumb_path, item.fanart_poster_path, item.backdrop_path, item.poster_path] : [item.backdrop_path, item.poster_path];
+  if (type !== "poster" && typeof window !== "undefined" && window.innerWidth < window.innerHeight) {
+    paths = [item.poster_path, ...paths.filter((p) => p && p !== item.poster_path)];
+  }
   const base = domain || "https://image.tmdb.org/t/p/original";
   const urls = paths.filter((p) => !!p).map((p) => /^https?:\/\//.test(p) ? p : p.startsWith("/api/") ? p : p.startsWith("/") ? base + p : base + "/" + p);
   return [...new Set(urls)];

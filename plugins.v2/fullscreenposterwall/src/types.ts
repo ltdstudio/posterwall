@@ -43,11 +43,17 @@ export function pickImageUrl(item: PosterItem, type: 'backdrop' | 'poster' | 'lo
  */
 export function pickImageCandidates(item: PosterItem, type: 'backdrop' | 'poster' | 'logo' | string, domain: string): string[] {
   if (!item) return [];
-  const paths = type === 'poster'
+  let paths = type === 'poster'
     ? [item.poster_path, item.backdrop_path]
     : type === 'logo'
       ? [item.thumb_path, item.fanart_poster_path, item.backdrop_path, item.poster_path]
       : [item.backdrop_path, item.poster_path];
+  // 竖屏优化：竖屏设备 poster（2:3 竖图）优先，横屏行为完全不变
+  if (type !== 'poster'
+      && typeof window !== 'undefined'
+      && window.innerWidth < window.innerHeight) {
+    paths = [item.poster_path, ...paths.filter(p => p && p !== item.poster_path)];
+  }
   const base = domain || 'https://image.tmdb.org/t/p/original';
   const urls = paths
     .filter((p): p is string => !!p)
