@@ -80,7 +80,7 @@ function spawn(): Moving | null {
     vy: Math.sin(angle) * speed,
     size,
     rot: 0,
-    baseRot: (Math.random() - 0.5) * 3,   // ±1.5°
+    baseRot: (Math.random() - 0.5) * 6,   // ±3°
     phase: Math.random() * Math.PI * 2,
     z: Math.random(),
     fade: 0,
@@ -135,8 +135,8 @@ function step(now: number) {
     if (m.y < -m.size * 0.3) { m.y = -m.size * 0.3; m.vy = Math.abs(m.vy); }
     if (m.y > h - m.size * 0.5) { m.y = h - m.size * 0.5; m.vy = -Math.abs(m.vy); }
     m.fade = Math.min(1, m.fade + 0.02);
-    // 有界摆动（不累积）：最大倾角 ≈ baseRot ± 1.2°，长时间运行不越发越斜
-    m.rot = m.baseRot + Math.sin(now / 1000 * 0.5 + m.phase) * 1.2;
+    // 有界摆动（不累积）：最大倾角 ≈ baseRot ± 2°（峰值 ~5°），长时间运行不越发越斜
+    m.rot = m.baseRot + Math.sin(now / 1000 * 0.5 + m.phase) * 2;
   }
   raf = requestAnimationFrame(step);
 }
