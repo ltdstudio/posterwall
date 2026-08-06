@@ -131,6 +131,7 @@ class FullScreenPosterWall(_PluginBase):
     plugin_version = "1.15.10"
     plugin_label = "媒体展示"
     plugin_author = "ltdstudio"
+    author_url = "https://github.com/ltdstudio/posterwall"
     plugin_config_prefix = "fullscreenposterwall_"
     plugin_order = 50
     auth_level = 1
