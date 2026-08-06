@@ -1,4 +1,17 @@
 {
+  "HRBlocker": {
+    "name": "H&R Blocker",
+    "description": "屏蔽所有带H&R的种子：联动H&R助手配置，在搜索、订阅等任何场景下H&R种子都不会被选中下载。",
+    "labels": "站点",
+    "version": "1.0.0",
+    "icon": "",
+    "author": "ltdstudio",
+    "level": 1,
+    "system_version": ">=2.12.0",
+    "history": {
+      "v1.0.0": "初始版本：资源选择+资源下载双事件拦截，支持站点H&R标记种子与全站H&R站点屏蔽（联动H&R助手）"
+    }
+  },
   "FullScreenPosterWall": {
     "name": "全屏海报墙",
     "description": "这是一个全屏海报墙插件，让所有终端可以播放精美的电影海报。抓取 MoviePilot 推荐媒体（流行趋势/TMDB热门电影/TMDB热门电视剧）的海报图片，以照片/拼贴/纵深穿梭/滑动面板/浮动/怀旧冲印/光舞等多种动效全屏展示，支持局域网海报墙页面。",
