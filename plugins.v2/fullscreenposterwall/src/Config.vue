@@ -17,7 +17,7 @@
 
       <div class="mb-3">
         <div class="d-flex align-center mb-1">
-          <span class="text-subtitle-2">推荐数据源（每个来源分别勾选电影/电视剧）</span>
+          <span class="text-subtitle-2">推荐数据源（下拉勾选，不占页面）</span>
           <v-progress-circular
             v-if="sourcesLoading"
             indeterminate size="16" width="2" class="ml-2"
@@ -29,38 +29,44 @@
         >
           {{ sourcesError }}
         </v-alert>
-        <div
-          v-for="s in sourceList"
-          :key="s.api_path"
-          class="d-flex align-center source-row"
+        <v-select
+          v-model="selectedPaths"
+          :items="sourceList"
+          item-title="name"
+          item-value="api_path"
+          label="勾选数据源（可多选）"
+          multiple chips closable-chips
+          density="comfortable"
+          :menu-props="{ maxHeight: 400 }"
         >
-          <v-checkbox
-            :model-value="isSourceOn(s.api_path)"
-            hide-details density="compact" class="source-enable"
-            @update:model-value="v => toggleSource(s, v)"
-          />
-          <span class="source-name">
-            {{ s.name }}
-            <v-chip
-              v-if="!s.builtin"
-              size="x-small" color="purple" variant="tonal" class="ml-1"
-            >第三方</v-chip>
-            <span class="source-nat text-grey">{{ natLabel(s.nat) }}</span>
-          </span>
+          <template v-slot:item="{ props: itemProps, item }">
+            <v-list-item v-bind="itemProps">
+              <template v-slot:append>
+                <v-chip
+                  size="x-small" variant="tonal" class="ml-1"
+                  :color="item.raw.builtin ? undefined : 'purple'"
+                >{{ item.raw.builtin ? '' : '第三方·' }}{{ natLabel(item.raw.nat) }}</v-chip>
+              </template>
+            </v-list-item>
+          </template>
+        </v-select>
+        <!-- 只有「混合源」才需要分电影/电视剧；电影源/剧集源天然单类型，不占行 -->
+        <div
+          v-for="s in enabledMixedSources"
+          :key="s.api_path"
+          class="d-flex align-center mixed-row"
+        >
+          <span class="source-name text-caption">{{ s.name }}（混合源）</span>
           <v-spacer />
           <v-checkbox
-            v-if="s.nat !== 'tv'"
             label="电影"
             :model-value="hasType(s.api_path, 'movie')"
-            :disabled="!isSourceOn(s.api_path)"
             hide-details density="compact" class="type-check"
             @update:model-value="v => toggleType(s.api_path, 'movie', v)"
           />
           <v-checkbox
-            v-if="s.nat !== 'movie'"
             label="电视剧"
             :model-value="hasType(s.api_path, 'tv')"
-            :disabled="!isSourceOn(s.api_path)"
             hide-details density="compact" class="type-check"
             @update:model-value="v => toggleType(s.api_path, 'tv', v)"
           />
@@ -172,7 +178,7 @@
 // 保存完全交给宿主前端（emit('save', cfg)），宿主会用 api.put('plugin/{id}', cfg)
 // 持久化。在 baseURL='api/v1/' 的 axios 下，绝对不能在组件里写 'api/v1/plugin/...'，
 // 否则会变成 'api/v1/api/v1/plugin/...'（404 双前缀）。
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 
 const props = defineProps({
   initialConfig: {
@@ -237,24 +243,31 @@ const sourcesError = ref('')
 function natLabel(nat) {
   return nat === 'movie' ? '电影源' : nat === 'tv' ? '剧集源' : '混合源'
 }
-function isSourceOn(apiPath) {
-  const t = local.source_config?.[apiPath]
-  return Array.isArray(t) && t.length > 0
-}
 function hasType(apiPath, type) {
   const t = local.source_config?.[apiPath]
   return Array.isArray(t) && t.includes(type)
 }
-function toggleSource(s, on) {
-  const cfg = { ...(local.source_config || {}) }
-  if (on) {
-    // 按来源天然类型给默认勾选：混合源全开，单类型源只开对应侧
-    cfg[s.api_path] = s.nat === 'movie' ? ['movie'] : s.nat === 'tv' ? ['tv'] : ['movie', 'tv']
-  } else {
-    delete cfg[s.api_path]
-  }
-  local.source_config = cfg
-}
+// 下拉选中集 ↔ source_config 双向映射：
+// 勾选时按天然类型给默认（混合源全开，单类型源只开对应侧）
+const selectedPaths = computed({
+  get: () => Object.entries(local.source_config || {})
+    .filter(([, t]) => Array.isArray(t) && t.length)
+    .map(([k]) => k),
+  set: (paths) => {
+    const cfg = {}
+    for (const p of paths) {
+      const s = sourceList.value.find(x => x.api_path === p)
+      const prev = (local.source_config || {})[p]
+      if (Array.isArray(prev) && prev.length) { cfg[p] = prev; continue }
+      cfg[p] = !s ? ['movie', 'tv'] : s.nat === 'movie' ? ['movie'] : s.nat === 'tv' ? ['tv'] : ['movie', 'tv']
+    }
+    local.source_config = cfg
+  },
+})
+// 只有已勾选的混合源才展开电影/电视剧行
+const enabledMixedSources = computed(() =>
+  sourceList.value.filter(s => s.nat === 'mixed' && selectedPaths.value.includes(s.api_path))
+)
 function toggleType(apiPath, type, on) {
   const cfg = { ...(local.source_config || {}) }
   const cur = new Set(Array.isArray(cfg[apiPath]) ? cfg[apiPath] : [])
@@ -320,9 +333,7 @@ function onReset() {
 <style scoped>
 .fspw-config-root { width: 100%; }
 .gap-2 > * + * { margin-left: 8px; }
-.source-row { min-height: 36px; }
-.source-enable { flex: 0 0 auto; margin-right: 4px; }
-.source-name { font-size: 0.875rem; }
-.source-nat { font-size: 0.75rem; margin-left: 6px; }
+.mixed-row { min-height: 32px; }
+.source-name { font-size: 0.8rem; }
 .type-check { flex: 0 0 auto; margin-left: 8px; }
 </style>
