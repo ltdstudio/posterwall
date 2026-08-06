@@ -17,13 +17,13 @@ class HRBlocker(_PluginBase):
     # 插件描述
     plugin_desc = "屏蔽所有带H&R的种子，搜索、订阅等任何场景都不会选中H&R种子。"
     # 插件图标
-    plugin_icon = ""
+    plugin_icon = "https://raw.githubusercontent.com/ltdstudio/hrblocker/main/icons/hrblocker.png"
     # 插件版本
     plugin_version = "1.1.3"
     # 插件作者
     plugin_author = "ltdstudio"
     # 作者主页
-    author_url = "https://github.com/ltdstudio"
+    author_url = "https://github.com/ltdstudio/hrblocker"
     # 插件配置项ID前缀
     plugin_config_prefix = "hrblocker_"
     # 加载顺序
