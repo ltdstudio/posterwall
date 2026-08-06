@@ -1,7 +1,7 @@
 {
   "HRBlocker": {
     "name": "H&R Blocker",
-    "description": "屏蔽所有带H&R的种子：联动H&R助手配置，在搜索、订阅等任何场景下H&R种子都不会被选中下载。",
+    "description": "屏蔽所有带H&R的种子，搜索、订阅等任何场景都不会选中H&R种子。",
     "labels": "站点",
     "version": "1.0.0",
     "icon": "",
