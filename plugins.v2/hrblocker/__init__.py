@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from app.core.event import Event, eventmanager
@@ -18,7 +19,7 @@ class HRBlocker(_PluginBase):
     # 插件图标
     plugin_icon = ""
     # 插件版本
-    plugin_version = "1.0.0"
+    plugin_version = "1.1.0"
     # 插件作者
     plugin_author = "ltdstudio"
     # 作者主页
@@ -40,6 +41,10 @@ class HRBlocker(_PluginBase):
     _block_manual = True
     # 拦截时发送通知
     _notify = False
+    # 屏蔽记录（最新在前，上限100条）
+    _records: List[Dict[str, Any]] = []
+    # 记录保留条数
+    MAX_RECORDS = 100
 
     def init_plugin(self, config: dict = None):
         if config:
@@ -55,6 +60,8 @@ class HRBlocker(_PluginBase):
                 "block_manual": self._block_manual,
                 "notify": self._notify,
             })
+        # 加载历史屏蔽记录
+        self._records = self.get_data("records") or []
         if self._enabled:
             hr_sites = self.__get_hr_active_sites()
             logger.info(f"【{self.plugin_name}】已启用，逐种子H&R标记屏蔽：{'开' if self._block_marked else '关'}，"
@@ -77,6 +84,13 @@ class HRBlocker(_PluginBase):
                 "methods": ["GET"],
                 "summary": "H&R Blocker状态",
                 "description": "查看当前生效配置及联动解析出的全站H&R站点清单",
+            },
+            {
+                "path": "/records",
+                "endpoint": self.api_records,
+                "methods": ["GET"],
+                "summary": "屏蔽记录",
+                "description": "查看最近屏蔽的H&R种子记录（最多100条）",
             }
         ]
 
@@ -200,6 +214,11 @@ class HRBlocker(_PluginBase):
     def get_page(self) -> List[dict]:
         return []
 
+    @staticmethod
+    def get_render_mode() -> Tuple[str, str]:
+        """声明插件使用 Vue 联邦组件渲染详情页（屏蔽记录面板）。"""
+        return "vue", "dist/assets"
+
     def stop_service(self):
         pass
 
@@ -238,6 +257,8 @@ class HRBlocker(_PluginBase):
             for context, reason in blocked:
                 title = getattr(context.torrent_info, "title", "") if context.torrent_info else ""
                 site_name = getattr(context.torrent_info, "site_name", "") if context.torrent_info else ""
+                self.__add_record(title=title, site=site_name, reason=reason,
+                                  source=origin, stage="资源选择")
                 logger.info(f"【{self.plugin_name}】已从候选中剔除H&R种子：{title}"
                             f"{'（站点：' + site_name + '）' if site_name else ''}，原因：{reason}，来源：{origin}")
             logger.info(f"【{self.plugin_name}】本次共剔除 {len(blocked)} 个H&R种子，剩余 {len(kept)} 个候选，来源：{origin}")
@@ -278,6 +299,8 @@ class HRBlocker(_PluginBase):
             data.cancel = True
             data.source = self.plugin_name
             data.reason = f"H&R种子已屏蔽（{reason}）"
+            self.__add_record(title=title, site=site_name, reason=reason,
+                              source=origin or "未知来源", stage="下载拦截")
             logger.info(f"【{self.plugin_name}】已拦截H&R种子下载：{title}"
                         f"{'（站点：' + site_name + '）' if site_name else ''}，原因：{reason}，来源：{origin or '未知来源'}")
             if self._notify:
@@ -290,6 +313,24 @@ class HRBlocker(_PluginBase):
     # endregion
 
     # region 私有方法
+
+    def __add_record(self, title: str, site: str, reason: str, source: str, stage: str):
+        """
+        追加一条屏蔽记录（最新在前，上限 MAX_RECORDS 条，持久化到插件数据）
+        """
+        try:
+            self._records.insert(0, {
+                "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "title": title or "未知种子",
+                "site": site or "",
+                "reason": reason or "",
+                "source": source or "",
+                "stage": stage or "",
+            })
+            del self._records[self.MAX_RECORDS:]
+            self.save_data("records", self._records)
+        except Exception as e:
+            logger.error(f"【{self.plugin_name}】保存屏蔽记录失败：{e}")
 
     def __is_hr_context(self, context) -> Tuple[bool, str]:
         """
@@ -351,6 +392,19 @@ class HRBlocker(_PluginBase):
         except Exception as e:
             logger.error(f"【HRBlocker】解析H&R助手配置失败：{e}")
         return result
+
+    def api_records(self) -> Dict[str, Any]:
+        """
+        返回屏蔽记录（最新在前，最多100条；直接读插件数据，保证插件重载后也不丢）
+        """
+        records = self.get_data("records")
+        if records is None:
+            records = self._records or []
+        return {
+            "total": len(records),
+            "max_records": self.MAX_RECORDS,
+            "records": records,
+        }
 
     def api_status(self) -> Dict[str, Any]:
         """

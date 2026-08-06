@@ -3,12 +3,13 @@
     "name": "H&R Blocker",
     "description": "屏蔽所有带H&R的种子，搜索、订阅等任何场景都不会选中H&R种子。",
     "labels": "站点",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "icon": "",
     "author": "ltdstudio",
     "level": 1,
     "system_version": ">=2.12.0",
     "history": {
+      "v1.1.0": "新增插件页「H&R 屏蔽记录」固定面板（Vue联邦），保留最近100条屏蔽记录",
       "v1.0.0": "初始版本：资源选择+资源下载双事件拦截，支持站点H&R标记种子与全站H&R站点屏蔽（联动H&R助手）"
     }
   },
