@@ -19,7 +19,7 @@ class HRBlocker(_PluginBase):
     # 插件图标
     plugin_icon = ""
     # 插件版本
-    plugin_version = "1.1.1"
+    plugin_version = "1.1.2"
     # 插件作者
     plugin_author = "ltdstudio"
     # 作者主页
@@ -414,6 +414,7 @@ class HRBlocker(_PluginBase):
         pm = PluginManager()
         assistant_conf = pm.get_plugin_config("HitAndRun")
         return {
+            "version": self.plugin_version,
             "enabled": self._enabled,
             "block_marked": self._block_marked,
             "sync_assistant": self._sync_assistant,

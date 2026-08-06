@@ -1,21 +1,26 @@
 import { importShared } from './__federation_fn_import-JrT3xvdd.js';
 import { _ as _export_sfc } from './_plugin-vue_export-helper-pcqpp-6-.js';
 
-const {resolveComponent:_resolveComponent,createVNode:_createVNode,createTextVNode:_createTextVNode,withCtx:_withCtx,toDisplayString:_toDisplayString,createElementVNode:_createElementVNode,openBlock:_openBlock,createElementBlock:_createElementBlock,createCommentVNode:_createCommentVNode,renderList:_renderList,Fragment:_Fragment} = await importShared('vue');
+const {resolveComponent:_resolveComponent,createVNode:_createVNode,createElementVNode:_createElementVNode,toDisplayString:_toDisplayString,createTextVNode:_createTextVNode,withCtx:_withCtx,Fragment:_Fragment,openBlock:_openBlock,createElementBlock:_createElementBlock,createCommentVNode:_createCommentVNode,renderList:_renderList} = await importShared('vue');
 
 
 const _hoisted_1 = { class: "hrb-page" };
-const _hoisted_2 = { class: "hrb-center" };
-const _hoisted_3 = { class: "text-caption text-disabled mt-3" };
-const _hoisted_4 = {
+const _hoisted_2 = { class: "hrb-header" };
+const _hoisted_3 = { class: "hrb-title" };
+const _hoisted_4 = { class: "d-flex align-center" };
+const _hoisted_5 = { class: "hrb-meta-line" };
+const _hoisted_6 = { class: "hrb-header-actions" };
+const _hoisted_7 = { class: "hrb-center" };
+const _hoisted_8 = { class: "text-caption text-disabled mt-3" };
+const _hoisted_9 = {
   key: 0,
   class: "hrb-empty"
 };
-const _hoisted_5 = { class: "d-flex align-center" };
-const _hoisted_6 = ["title"];
-const _hoisted_7 = { class: "hrb-meta" };
-const _hoisted_8 = { key: 0 };
-const _hoisted_9 = { key: 1 };
+const _hoisted_10 = { class: "d-flex align-center" };
+const _hoisted_11 = ["title"];
+const _hoisted_12 = { class: "hrb-item-meta" };
+const _hoisted_13 = { key: 0 };
+const _hoisted_14 = { key: 1 };
 
 const {onBeforeUnmount,onMounted,ref} = await importShared('vue');
 
@@ -26,13 +31,19 @@ const _sfc_main = {
   props: {
   api: { type: Object, default: null },
 },
-  setup(__props) {
+  emits: ['switch'],
+  setup(__props, { emit: __emit }) {
 
 const props = __props;
+
+// 通知宿主切到 Config 弹窗（宿主插件页监听 @switch，见 PluginConfigDialog）
+const emit = __emit;
 
 const records = ref([]);
 const total = ref(0);
 const maxRecords = ref(100);
+const version = ref('');
+const hrSites = ref(0);
 const loading = ref(false);
 const dialog = ref(false);
 let timer = null;
@@ -41,14 +52,17 @@ function getApi() {
   return props.api || (typeof window !== 'undefined' ? window.MoviePilotAPI : null)
 }
 
+function unwrap(raw) {
+  // 主框架 axios 已解包；仅当顶层没有 success 字段时才再解一层（防止误吞内层 data）
+  return (raw && typeof raw === 'object' && 'success' in raw) ? raw : (raw?.data ?? raw)
+}
+
 async function fetchRecords() {
   const api = getApi();
   if (!api) return
   loading.value = true;
   try {
-    const raw = await api.get('plugin/HRBlocker/records');
-    // 主框架 axios 已解包；仅当顶层没有 success 字段时才再解一层（防止误吞内层 data）
-    const payload = (raw && typeof raw === 'object' && 'success' in raw) ? raw : (raw?.data ?? raw);
+    const payload = unwrap(await api.get('plugin/HRBlocker/records'));
     const list = payload?.records ?? payload?.data?.records;
     if (Array.isArray(list)) {
       records.value = list;
@@ -62,6 +76,23 @@ async function fetchRecords() {
   }
 }
 
+async function fetchStatus() {
+  const api = getApi();
+  if (!api) return
+  try {
+    const payload = unwrap(await api.get('plugin/HRBlocker/status'));
+    const body = payload?.data ?? payload;
+    version.value = body?.version ? `v${body.version}` : '';
+    hrSites.value = Array.isArray(body?.hr_active_sites) ? body.hr_active_sites.length : 0;
+  } catch (e) {
+    console.error('[HRBlocker] 加载状态失败', e);
+  }
+}
+
+function openSettings() {
+  emit('switch'); // 宿主切到 Config 弹窗
+}
+
 function openDialog() {
   dialog.value = true;
   fetchRecords();
@@ -69,7 +100,8 @@ function openDialog() {
 
 onMounted(() => {
   fetchRecords();
-  // 轻量轮询：仅弹窗打开时刷新列表，关闭时只低频刷新计数
+  fetchStatus();
+  // 轻量轮询：仅弹窗打开时刷新列表
   timer = setInterval(() => { if (dialog.value) fetchRecords(); }, 5000);
 });
 
@@ -79,8 +111,8 @@ onBeforeUnmount(() => {
 
 return (_ctx, _cache) => {
   const _component_v_icon = _resolveComponent("v-icon");
-  const _component_v_btn = _resolveComponent("v-btn");
   const _component_v_chip = _resolveComponent("v-chip");
+  const _component_v_btn = _resolveComponent("v-btn");
   const _component_v_spacer = _resolveComponent("v-spacer");
   const _component_v_card_title = _resolveComponent("v-card-title");
   const _component_v_divider = _resolveComponent("v-divider");
@@ -90,12 +122,49 @@ return (_ctx, _cache) => {
 
   return (_openBlock(), _createElementBlock("div", _hoisted_1, [
     _createElementVNode("div", _hoisted_2, [
-      _createVNode(_component_v_icon, {
-        icon: "mdi-shield-alert-outline",
-        size: "56",
-        color: "error",
-        class: "mb-4"
-      }),
+      _createElementVNode("div", _hoisted_3, [
+        _createVNode(_component_v_icon, {
+          icon: "mdi-shield-alert",
+          size: "34",
+          color: "error",
+          class: "mr-2"
+        }),
+        _createElementVNode("div", null, [
+          _createElementVNode("div", _hoisted_4, [
+            _cache[2] || (_cache[2] = _createElementVNode("h2", { class: "ma-0" }, "H&R Blocker", -1)),
+            _createVNode(_component_v_chip, {
+              class: "ml-2",
+              size: "x-small",
+              variant: "tonal",
+              color: "grey"
+            }, {
+              default: _withCtx(() => [
+                _createTextVNode(_toDisplayString(version.value), 1)
+              ]),
+              _: 1
+            })
+          ]),
+          _createElementVNode("div", _hoisted_5, [
+            _createTextVNode(" 已屏蔽 " + _toDisplayString(total.value) + " 条 H&R 种子 ", 1),
+            (hrSites.value > 0)
+              ? (_openBlock(), _createElementBlock(_Fragment, { key: 0 }, [
+                  _createTextVNode(" · 联动 " + _toDisplayString(hrSites.value) + " 个全站H&R站点", 1)
+                ], 64))
+              : _createCommentVNode("", true)
+          ])
+        ])
+      ]),
+      _createElementVNode("div", _hoisted_6, [
+        _createVNode(_component_v_btn, {
+          icon: "mdi-cog-outline",
+          variant: "text",
+          size: "small",
+          title: "插件设置",
+          onClick: openSettings
+        })
+      ])
+    ]),
+    _createElementVNode("div", _hoisted_7, [
       _createVNode(_component_v_btn, {
         color: "error",
         variant: "tonal",
@@ -103,12 +172,12 @@ return (_ctx, _cache) => {
         "prepend-icon": "mdi-format-list-bulleted",
         onClick: openDialog
       }, {
-        default: _withCtx(() => [...(_cache[2] || (_cache[2] = [
+        default: _withCtx(() => [...(_cache[3] || (_cache[3] = [
           _createTextVNode(" 查看屏蔽记录 ", -1)
         ]))]),
         _: 1
       }),
-      _createElementVNode("div", _hoisted_3, " 已屏蔽 " + _toDisplayString(total.value) + " 条 H&R 种子（保留最近 " + _toDisplayString(maxRecords.value) + " 条） ", 1)
+      _createElementVNode("div", _hoisted_8, " 保留最近 " + _toDisplayString(maxRecords.value) + " 条 ", 1)
     ]),
     _createVNode(_component_v_dialog, {
       modelValue: dialog.value,
@@ -127,7 +196,7 @@ return (_ctx, _cache) => {
                   color: "error",
                   size: "20"
                 }),
-                _cache[3] || (_cache[3] = _createElementVNode("span", { class: "text-subtitle-1" }, "H&R 屏蔽记录", -1)),
+                _cache[4] || (_cache[4] = _createElementVNode("span", { class: "text-subtitle-1" }, "H&R 屏蔽记录", -1)),
                 _createVNode(_component_v_chip, {
                   class: "ml-2",
                   size: "x-small",
@@ -163,15 +232,15 @@ return (_ctx, _cache) => {
             }, {
               default: _withCtx(() => [
                 (records.value.length === 0 && !loading.value)
-                  ? (_openBlock(), _createElementBlock("div", _hoisted_4, [
+                  ? (_openBlock(), _createElementBlock("div", _hoisted_9, [
                       _createVNode(_component_v_icon, {
                         icon: "mdi-shield-check-outline",
                         size: "40",
                         color: "success",
                         class: "mb-2"
                       }),
-                      _cache[4] || (_cache[4] = _createElementVNode("div", { class: "text-medium-emphasis text-body-2" }, "暂无屏蔽记录", -1)),
-                      _cache[5] || (_cache[5] = _createElementVNode("div", { class: "text-caption text-disabled mt-1" }, "被拦截的 H&R 种子会显示在这里", -1))
+                      _cache[5] || (_cache[5] = _createElementVNode("div", { class: "text-medium-emphasis text-body-2" }, "暂无屏蔽记录", -1)),
+                      _cache[6] || (_cache[6] = _createElementVNode("div", { class: "text-caption text-disabled mt-1" }, "被拦截的 H&R 种子会显示在这里", -1))
                     ]))
                   : _createCommentVNode("", true),
                 (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(records.value, (rec, i) => {
@@ -179,7 +248,7 @@ return (_ctx, _cache) => {
                     key: i,
                     class: "hrb-item"
                   }, [
-                    _createElementVNode("div", _hoisted_5, [
+                    _createElementVNode("div", _hoisted_10, [
                       _createVNode(_component_v_chip, {
                         size: "x-small",
                         color: rec.stage === '下载拦截' ? 'deep-orange' : 'warning',
@@ -194,16 +263,16 @@ return (_ctx, _cache) => {
                       _createElementVNode("span", {
                         class: "hrb-title",
                         title: rec.title
-                      }, _toDisplayString(rec.title), 9, _hoisted_6)
+                      }, _toDisplayString(rec.title), 9, _hoisted_11)
                     ]),
-                    _createElementVNode("div", _hoisted_7, [
+                    _createElementVNode("div", _hoisted_12, [
                       _createElementVNode("span", null, _toDisplayString(rec.time), 1),
                       (rec.site)
-                        ? (_openBlock(), _createElementBlock("span", _hoisted_8, "站点：" + _toDisplayString(rec.site), 1))
+                        ? (_openBlock(), _createElementBlock("span", _hoisted_13, "站点：" + _toDisplayString(rec.site), 1))
                         : _createCommentVNode("", true),
                       _createElementVNode("span", null, _toDisplayString(rec.reason), 1),
                       (rec.source)
-                        ? (_openBlock(), _createElementBlock("span", _hoisted_9, "来源：" + _toDisplayString(rec.source), 1))
+                        ? (_openBlock(), _createElementBlock("span", _hoisted_14, "来源：" + _toDisplayString(rec.source), 1))
                         : _createCommentVNode("", true)
                     ])
                   ]))
@@ -222,6 +291,6 @@ return (_ctx, _cache) => {
 }
 
 };
-const Page = /*#__PURE__*/_export_sfc(_sfc_main, [['__scopeId',"data-v-65569dcf"]]);
+const Page = /*#__PURE__*/_export_sfc(_sfc_main, [['__scopeId',"data-v-4399077f"]]);
 
 export { Page as default };
