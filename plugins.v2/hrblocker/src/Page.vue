@@ -1,55 +1,71 @@
 <template>
-  <v-card class="hrb-card" variant="flat">
-    <v-card-title class="d-flex align-center py-3 px-4">
-      <v-icon icon="mdi-shield-alert" class="mr-2" color="error" />
-      <span>H&R 屏蔽记录</span>
-      <v-chip class="ml-3" size="small" color="error" variant="tonal">
-        {{ records.length }} / {{ maxRecords }}
-      </v-chip>
-      <v-spacer />
+  <!-- 插件页：保持极简，居中一个「查看屏蔽记录」入口按钮 -->
+  <div class="hrb-page">
+    <div class="hrb-center">
+      <v-icon icon="mdi-shield-alert-outline" size="56" color="error" class="mb-4" />
       <v-btn
-        icon="mdi-refresh"
-        variant="text"
-        size="small"
-        :loading="loading"
-        @click="fetchRecords"
-      />
-    </v-card-title>
-    <v-divider />
-
-    <!-- 固定大小记录框：高度固定，内部滚动 -->
-    <div class="hrb-box">
-      <div v-if="records.length === 0 && !loading" class="hrb-empty">
-        <v-icon icon="mdi-shield-check-outline" size="48" color="success" class="mb-2" />
-        <div class="text-medium-emphasis">暂无屏蔽记录</div>
-        <div class="text-caption text-disabled mt-1">被拦截的 H&R 种子会显示在这里（保留最近 {{ maxRecords }} 条）</div>
-      </div>
-
-      <div v-for="(rec, i) in records" :key="i" class="hrb-item">
-        <div class="hrb-item-head">
-          <v-chip
-            size="x-small"
-            :color="rec.stage === '下载拦截' ? 'deep-orange' : 'warning'"
-            variant="flat"
-            class="mr-2"
-          >{{ rec.stage }}</v-chip>
-          <span class="hrb-time">{{ rec.time }}</span>
-        </div>
-        <div class="hrb-title" :title="rec.title">{{ rec.title }}</div>
-        <div class="hrb-meta">
-          <span v-if="rec.site" class="hrb-meta-item">
-            <v-icon icon="mdi-server" size="12" class="mr-1" />{{ rec.site }}
-          </span>
-          <span class="hrb-meta-item">
-            <v-icon icon="mdi-tag-outline" size="12" class="mr-1" />{{ rec.reason }}
-          </span>
-          <span v-if="rec.source" class="hrb-meta-item">
-            <v-icon icon="mdi-source-branch" size="12" class="mr-1" />{{ rec.source }}
-          </span>
-        </div>
+        color="error"
+        variant="tonal"
+        size="large"
+        prepend-icon="mdi-format-list-bulleted"
+        @click="openDialog"
+      >
+        查看屏蔽记录
+      </v-btn>
+      <div class="text-caption text-disabled mt-3">
+        已屏蔽 {{ total }} 条 H&R 种子（保留最近 {{ maxRecords }} 条）
       </div>
     </div>
-  </v-card>
+
+    <!-- 屏蔽记录弹出窗口 -->
+    <v-dialog v-model="dialog" max-width="560" scrollable>
+      <v-card>
+        <v-card-title class="d-flex align-center py-2 px-4">
+          <v-icon icon="mdi-shield-alert" class="mr-2" color="error" size="20" />
+          <span class="text-subtitle-1">H&R 屏蔽记录</span>
+          <v-chip class="ml-2" size="x-small" color="error" variant="tonal">
+            {{ records.length }} / {{ maxRecords }}
+          </v-chip>
+          <v-spacer />
+          <v-btn
+            icon="mdi-refresh"
+            variant="text"
+            size="small"
+            :loading="loading"
+            @click="fetchRecords"
+          />
+          <v-btn icon="mdi-close" variant="text" size="small" @click="dialog = false" />
+        </v-card-title>
+        <v-divider />
+
+        <v-card-text class="pa-2" style="height: 420px;">
+          <div v-if="records.length === 0 && !loading" class="hrb-empty">
+            <v-icon icon="mdi-shield-check-outline" size="40" color="success" class="mb-2" />
+            <div class="text-medium-emphasis text-body-2">暂无屏蔽记录</div>
+            <div class="text-caption text-disabled mt-1">被拦截的 H&R 种子会显示在这里</div>
+          </div>
+
+          <div v-for="(rec, i) in records" :key="i" class="hrb-item">
+            <div class="d-flex align-center">
+              <v-chip
+                size="x-small"
+                :color="rec.stage === '下载拦截' ? 'deep-orange' : 'warning'"
+                variant="flat"
+                class="mr-2 flex-shrink-0"
+              >{{ rec.stage }}</v-chip>
+              <span class="hrb-title" :title="rec.title">{{ rec.title }}</span>
+            </div>
+            <div class="hrb-meta">
+              <span>{{ rec.time }}</span>
+              <span v-if="rec.site">站点：{{ rec.site }}</span>
+              <span>{{ rec.reason }}</span>
+              <span v-if="rec.source">来源：{{ rec.source }}</span>
+            </div>
+          </div>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </div>
 </template>
 
 <script setup>
@@ -60,8 +76,10 @@ const props = defineProps({
 })
 
 const records = ref([])
+const total = ref(0)
 const maxRecords = ref(100)
 const loading = ref(false)
+const dialog = ref(false)
 let timer = null
 
 function getApi() {
@@ -79,6 +97,7 @@ async function fetchRecords() {
     const list = payload?.records ?? payload?.data?.records
     if (Array.isArray(list)) {
       records.value = list
+      total.value = payload?.total ?? payload?.data?.total ?? list.length
       maxRecords.value = payload?.max_records ?? payload?.data?.max_records ?? 100
     }
   } catch (e) {
@@ -88,9 +107,15 @@ async function fetchRecords() {
   }
 }
 
+function openDialog() {
+  dialog.value = true
+  fetchRecords()
+}
+
 onMounted(() => {
   fetchRecords()
-  timer = setInterval(fetchRecords, 5000)
+  // 轻量轮询：仅弹窗打开时刷新列表，关闭时只低频刷新计数
+  timer = setInterval(() => { if (dialog.value) fetchRecords() }, 5000)
 })
 
 onBeforeUnmount(() => {
@@ -99,16 +124,18 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.hrb-card {
+.hrb-page {
   width: 100%;
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* 固定大小的记录框 */
-.hrb-box {
-  height: 480px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 8px 12px;
+.hrb-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .hrb-empty {
@@ -120,9 +147,9 @@ onBeforeUnmount(() => {
 }
 
 .hrb-item {
-  padding: 8px 10px;
-  border-radius: 8px;
-  margin-bottom: 6px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  margin-bottom: 4px;
   background: rgba(var(--v-theme-on-surface), 0.04);
 }
 
@@ -130,40 +157,21 @@ onBeforeUnmount(() => {
   background: rgba(var(--v-theme-on-surface), 0.08);
 }
 
-.hrb-item-head {
-  display: flex;
-  align-items: center;
-  margin-bottom: 2px;
-}
-
-.hrb-time {
-  font-size: 11px;
-  opacity: 0.55;
-  font-variant-numeric: tabular-nums;
-}
-
 .hrb-title {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
-  line-height: 1.35;
-  word-break: break-all;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .hrb-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 12px;
-  margin-top: 3px;
-}
-
-.hrb-meta-item {
+  gap: 2px 10px;
+  margin-top: 2px;
   font-size: 11px;
-  opacity: 0.65;
-  display: inline-flex;
-  align-items: center;
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
 }
 </style>
