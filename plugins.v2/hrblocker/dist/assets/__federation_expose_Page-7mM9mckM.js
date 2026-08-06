@@ -9,18 +9,17 @@ const _hoisted_2 = { class: "hrb-header" };
 const _hoisted_3 = { class: "hrb-title" };
 const _hoisted_4 = { class: "d-flex align-center" };
 const _hoisted_5 = { class: "hrb-meta-line" };
-const _hoisted_6 = { class: "hrb-header-actions" };
-const _hoisted_7 = { class: "hrb-center" };
-const _hoisted_8 = { class: "text-caption text-disabled mt-3" };
-const _hoisted_9 = {
+const _hoisted_6 = { class: "hrb-center" };
+const _hoisted_7 = { class: "text-caption text-disabled mt-3" };
+const _hoisted_8 = {
   key: 0,
   class: "hrb-empty"
 };
-const _hoisted_10 = { class: "d-flex align-center" };
-const _hoisted_11 = ["title"];
-const _hoisted_12 = { class: "hrb-item-meta" };
-const _hoisted_13 = { key: 0 };
-const _hoisted_14 = { key: 1 };
+const _hoisted_9 = { class: "d-flex align-center" };
+const _hoisted_10 = ["title"];
+const _hoisted_11 = { class: "hrb-item-meta" };
+const _hoisted_12 = { key: 0 };
+const _hoisted_13 = { key: 1 };
 
 const {onBeforeUnmount,onMounted,ref} = await importShared('vue');
 
@@ -154,17 +153,9 @@ return (_ctx, _cache) => {
           ])
         ])
       ]),
-      _createElementVNode("div", _hoisted_6, [
-        _createVNode(_component_v_btn, {
-          icon: "mdi-cog-outline",
-          variant: "text",
-          size: "small",
-          title: "插件设置",
-          onClick: openSettings
-        })
-      ])
+      _cache[3] || (_cache[3] = _createElementVNode("div", { class: "hrb-header-actions" }, null, -1))
     ]),
-    _createElementVNode("div", _hoisted_7, [
+    _createElementVNode("div", _hoisted_6, [
       _createVNode(_component_v_btn, {
         color: "error",
         variant: "tonal",
@@ -172,13 +163,27 @@ return (_ctx, _cache) => {
         "prepend-icon": "mdi-format-list-bulleted",
         onClick: openDialog
       }, {
-        default: _withCtx(() => [...(_cache[3] || (_cache[3] = [
+        default: _withCtx(() => [...(_cache[4] || (_cache[4] = [
           _createTextVNode(" 查看屏蔽记录 ", -1)
         ]))]),
         _: 1
       }),
-      _createElementVNode("div", _hoisted_8, " 保留最近 " + _toDisplayString(maxRecords.value) + " 条 ", 1)
+      _createElementVNode("div", _hoisted_7, " 保留最近 " + _toDisplayString(maxRecords.value) + " 条 ", 1)
     ]),
+    _createVNode(_component_v_btn, {
+      class: "hrb-settings-btn",
+      color: "primary",
+      variant: "tonal",
+      size: "large",
+      "prepend-icon": "mdi-cog-outline",
+      title: "插件设置",
+      onClick: openSettings
+    }, {
+      default: _withCtx(() => [...(_cache[5] || (_cache[5] = [
+        _createTextVNode(" 设置 ", -1)
+      ]))]),
+      _: 1
+    }),
     _createVNode(_component_v_dialog, {
       modelValue: dialog.value,
       "onUpdate:modelValue": _cache[1] || (_cache[1] = $event => ((dialog).value = $event)),
@@ -196,7 +201,7 @@ return (_ctx, _cache) => {
                   color: "error",
                   size: "20"
                 }),
-                _cache[4] || (_cache[4] = _createElementVNode("span", { class: "text-subtitle-1" }, "H&R 屏蔽记录", -1)),
+                _cache[6] || (_cache[6] = _createElementVNode("span", { class: "text-subtitle-1" }, "H&R 屏蔽记录", -1)),
                 _createVNode(_component_v_chip, {
                   class: "ml-2",
                   size: "x-small",
@@ -232,15 +237,15 @@ return (_ctx, _cache) => {
             }, {
               default: _withCtx(() => [
                 (records.value.length === 0 && !loading.value)
-                  ? (_openBlock(), _createElementBlock("div", _hoisted_9, [
+                  ? (_openBlock(), _createElementBlock("div", _hoisted_8, [
                       _createVNode(_component_v_icon, {
                         icon: "mdi-shield-check-outline",
                         size: "40",
                         color: "success",
                         class: "mb-2"
                       }),
-                      _cache[5] || (_cache[5] = _createElementVNode("div", { class: "text-medium-emphasis text-body-2" }, "暂无屏蔽记录", -1)),
-                      _cache[6] || (_cache[6] = _createElementVNode("div", { class: "text-caption text-disabled mt-1" }, "被拦截的 H&R 种子会显示在这里", -1))
+                      _cache[7] || (_cache[7] = _createElementVNode("div", { class: "text-medium-emphasis text-body-2" }, "暂无屏蔽记录", -1)),
+                      _cache[8] || (_cache[8] = _createElementVNode("div", { class: "text-caption text-disabled mt-1" }, "被拦截的 H&R 种子会显示在这里", -1))
                     ]))
                   : _createCommentVNode("", true),
                 (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(records.value, (rec, i) => {
@@ -248,7 +253,7 @@ return (_ctx, _cache) => {
                     key: i,
                     class: "hrb-item"
                   }, [
-                    _createElementVNode("div", _hoisted_10, [
+                    _createElementVNode("div", _hoisted_9, [
                       _createVNode(_component_v_chip, {
                         size: "x-small",
                         color: rec.stage === '下载拦截' ? 'deep-orange' : 'warning',
@@ -263,16 +268,16 @@ return (_ctx, _cache) => {
                       _createElementVNode("span", {
                         class: "hrb-title",
                         title: rec.title
-                      }, _toDisplayString(rec.title), 9, _hoisted_11)
+                      }, _toDisplayString(rec.title), 9, _hoisted_10)
                     ]),
-                    _createElementVNode("div", _hoisted_12, [
+                    _createElementVNode("div", _hoisted_11, [
                       _createElementVNode("span", null, _toDisplayString(rec.time), 1),
                       (rec.site)
-                        ? (_openBlock(), _createElementBlock("span", _hoisted_13, "站点：" + _toDisplayString(rec.site), 1))
+                        ? (_openBlock(), _createElementBlock("span", _hoisted_12, "站点：" + _toDisplayString(rec.site), 1))
                         : _createCommentVNode("", true),
                       _createElementVNode("span", null, _toDisplayString(rec.reason), 1),
                       (rec.source)
-                        ? (_openBlock(), _createElementBlock("span", _hoisted_14, "来源：" + _toDisplayString(rec.source), 1))
+                        ? (_openBlock(), _createElementBlock("span", _hoisted_13, "来源：" + _toDisplayString(rec.source), 1))
                         : _createCommentVNode("", true)
                     ])
                   ]))
@@ -291,6 +296,6 @@ return (_ctx, _cache) => {
 }
 
 };
-const Page = /*#__PURE__*/_export_sfc(_sfc_main, [['__scopeId',"data-v-4399077f"]]);
+const Page = /*#__PURE__*/_export_sfc(_sfc_main, [['__scopeId',"data-v-f18e04a0"]]);
 
 export { Page as default };

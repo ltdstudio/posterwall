@@ -15,15 +15,7 @@
           </div>
         </div>
       </div>
-      <div class="hrb-header-actions">
-        <v-btn
-          icon="mdi-cog-outline"
-          variant="text"
-          size="small"
-          title="插件设置"
-          @click="openSettings"
-        />
-      </div>
+      <div class="hrb-header-actions" />
     </div>
 
     <!-- ─── 中部：查看屏蔽记录入口 ─── -->
@@ -41,6 +33,19 @@
         保留最近 {{ maxRecords }} 条
       </div>
     </div>
+
+    <!-- ─── 右下角：设置按钮（参照插件卡片 bottom-right 动作位，加大尺寸） ─── -->
+    <v-btn
+      class="hrb-settings-btn"
+      color="primary"
+      variant="tonal"
+      size="large"
+      prepend-icon="mdi-cog-outline"
+      title="插件设置"
+      @click="openSettings"
+    >
+      设置
+    </v-btn>
 
     <!-- 屏蔽记录弹出窗口 -->
     <v-dialog v-model="dialog" max-width="560" scrollable>
@@ -177,6 +182,14 @@ onBeforeUnmount(() => {
 <style scoped>
 .hrb-page {
   width: 100%;
+  position: relative;
+}
+
+/* 右下角设置按钮（对齐插件卡片 absolute bottom-0 right-0 动作位） */
+.hrb-settings-btn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
 }
 
 .hrb-header {
