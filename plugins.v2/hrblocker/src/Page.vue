@@ -10,7 +10,7 @@
             <v-chip class="ml-2" size="x-small" variant="tonal" color="grey">{{ version }}</v-chip>
           </div>
           <div class="hrb-meta-line">
-            已屏蔽 {{ total }} 条 H&amp;R 种子
+            已屏蔽 {{ total }}/{{ maxRecords }} 条 H&amp;R 种子
             <template v-if="hrSites > 0"> · 联动 {{ hrSites }} 个全站H&amp;R站点</template>
           </div>
         </div>
@@ -30,7 +30,7 @@
         查看屏蔽记录
       </v-btn>
       <div class="text-caption text-disabled mt-3">
-        保留最近 {{ maxRecords }} 条
+        已屏蔽 {{ total }}/{{ maxRecords }} 条（保留最近 {{ maxRecords }} 条）
       </div>
     </div>
 
@@ -57,6 +57,17 @@
             {{ records.length }} / {{ maxRecords }}
           </v-chip>
           <v-spacer />
+          <v-btn
+            v-if="records.length > 0"
+            size="small"
+            :color="confirmClear ? 'error' : undefined"
+            :variant="confirmClear ? 'flat' : 'text'"
+            prepend-icon="mdi-delete-sweep-outline"
+            :loading="clearing"
+            @click="onClearClick"
+          >
+            {{ confirmClear ? '确认清除' : '清除记录' }}
+          </v-btn>
           <v-btn
             icon="mdi-refresh"
             variant="text"
@@ -115,7 +126,10 @@ const version = ref('')
 const hrSites = ref(0)
 const loading = ref(false)
 const dialog = ref(false)
+const clearing = ref(false)
+const confirmClear = ref(false)
 let timer = null
+let confirmTimer = null
 
 function getApi() {
   return props.api || (typeof window !== 'undefined' ? window.MoviePilotAPI : null)
@@ -162,6 +176,33 @@ function openSettings() {
   emit('switch') // 宿主切到 Config 弹窗
 }
 
+// 两段式确认：第一次点击变为「确认清除」（3秒内有效），第二次真正清空
+function onClearClick() {
+  if (!confirmClear.value) {
+    confirmClear.value = true
+    confirmTimer = setTimeout(() => { confirmClear.value = false }, 3000)
+    return
+  }
+  if (confirmTimer) clearTimeout(confirmTimer)
+  confirmClear.value = false
+  clearRecords()
+}
+
+async function clearRecords() {
+  const api = getApi()
+  if (!api) return
+  clearing.value = true
+  try {
+    await api.post('plugin/HRBlocker/records/clear')
+    records.value = []
+    total.value = 0
+  } catch (e) {
+    console.error('[HRBlocker] 清空屏蔽记录失败', e)
+  } finally {
+    clearing.value = false
+  }
+}
+
 function openDialog() {
   dialog.value = true
   fetchRecords()
@@ -176,6 +217,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   if (timer) clearInterval(timer)
+  if (confirmTimer) clearTimeout(confirmTimer)
 })
 </script>
 
