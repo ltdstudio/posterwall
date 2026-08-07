@@ -1,7 +1,17 @@
 <template>
   <div class="fspw-config-root pa-4">
     <v-card variant="outlined" class="pa-4 mb-3">
-      <h3 class="mb-3">全屏海报墙 — 插件设置</h3>
+      <div class="d-flex align-center mb-3">
+        <h3 class="ma-0">全屏海报墙 — 插件设置</h3>
+        <v-spacer />
+        <v-btn
+          icon="mdi-close"
+          variant="text"
+          size="small"
+          title="关闭"
+          @click="emit('close')"
+        />
+      </div>
 
       <v-switch
         v-model="local.enabled"
@@ -17,7 +27,7 @@
 
       <div class="mb-3">
         <div class="d-flex align-center mb-1">
-          <span class="text-subtitle-2">推荐数据源（下拉勾选，不占页面）</span>
+          <span class="text-subtitle-2">推荐数据源</span>
           <v-progress-circular
             v-if="sourcesLoading"
             indeterminate size="16" width="2" class="ml-2"

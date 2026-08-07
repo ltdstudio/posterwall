@@ -27,6 +27,13 @@
           title="插件设置"
         />
         <v-btn
+          icon="mdi-close"
+          variant="text"
+          size="small"
+          @click="emit('close')"
+          title="关闭"
+        />
+        <v-btn
           color="primary"
           variant="tonal"
           prepend-icon="mdi-play-circle-outline"
@@ -179,7 +186,7 @@ import SlidingPanels from './effects/SlidingPanels.vue'
 import RingGallery from './effects/RingGallery.vue'
 import DepthTunnel from './effects/DepthTunnel.vue'
 
-const emit = defineEmits(['switch'])  // 通知宿主切到 Config 弹窗
+const emit = defineEmits(['switch', 'close'])  // switch=切到设置弹窗；close=关闭（宿主 PluginDataDialog 转发）
 
 const API_BASE = 'plugin/FullScreenPosterWall'
 const TMDB_DOMAIN = 'https://image.tmdb.org/t/p/original'
@@ -451,12 +458,13 @@ onBeforeUnmount(() => {
 .fspw-section-hint { font-weight: normal; font-size: 12px; opacity: 0.6; }
 .fspw-effects {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 150px));
+  justify-content: center;
   gap: 10px;
 }
 .fspw-effect {
   position: relative;
-  padding: 12px 10px;
+  padding: 10px 8px;
   border-radius: 10px;
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.08);
@@ -533,6 +541,6 @@ onBeforeUnmount(() => {
 .fspw-exit:hover { background: rgba(220,38,38,0.6); }
 
 @media (max-width: 720px) {
-  .fspw-effects { grid-template-columns: repeat(2, 1fr); }
+  .fspw-effects { grid-template-columns: repeat(2, minmax(0, 150px)); }
 }
 </style>
